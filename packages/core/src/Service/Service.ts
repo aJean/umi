@@ -227,6 +227,7 @@ export default class Service extends EventEmitter {
       type: this.ApplyPluginsType.modify,
       initialValue: await this.configInstance.getDefaultConfig(),
     });
+    // 可以在插件里通过 api.modifyConfig() 修改
     this.config = await this.applyPlugins({
       key: 'modifyConfig',
       type: this.ApplyPluginsType.modify,

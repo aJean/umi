@@ -10,7 +10,8 @@ import {
 import generateFiles from '../generateFiles';
 
 const logger = new Logger('umi:preset-build-in');
-
+ 
+// umi build 实现，可以通过 api.service.runCommand 调用
 export default function (api: IApi) {
   const {
     paths,
@@ -25,7 +26,7 @@ export default function (api: IApi) {
         absTmpPath: paths.absTmpPath!,
       });
 
-      // generate files
+      // generate files，触发 onGenerateFiles 生命周期
       await generateFiles({ api, watch: false });
 
       // build

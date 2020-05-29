@@ -244,6 +244,7 @@ export default class Config {
     });
     watcher.on('all', (event, path) => {
       console.log(chalk.green(`[${event}] ${path}`));
+      // 可能加入新的配置文件
       const newPaths = this.getWatchFilesAndDirectories();
       const diffs = lodash.difference(newPaths, paths);
       if (diffs.length) {
