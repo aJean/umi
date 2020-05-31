@@ -45,6 +45,7 @@ export default function (api: IApi) {
     'modifyRendererPath',
     'modifyRoutes',
   ].forEach((name) => {
+    // 没提供 fn，都是走 api.modifyBundleConfig(fn) -> register(hook) 这套标准
     api.registerMethod({ name });
   });
 

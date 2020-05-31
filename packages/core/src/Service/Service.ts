@@ -140,6 +140,8 @@ export default class Service extends EventEmitter {
       presets: opts.presets || [],
       userConfigPresets: this.userConfig.presets || [],
     });
+
+    // 将 path 转化成 plugin obj 保存
     this.initialPlugins = resolvePlugins({
       ...baseOpts,
       plugins: opts.plugins || [],

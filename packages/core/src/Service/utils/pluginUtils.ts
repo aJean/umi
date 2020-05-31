@@ -86,6 +86,7 @@ function pkgNameToKey(pkgName: string, type: PluginType) {
   return nameToKey(pkgName.replace(RE[type], ''));
 }
 
+// 会给每个 plugin 一个 id，默认是 path
 export function pathToObj({
   type,
   path,
