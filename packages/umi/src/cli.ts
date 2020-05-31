@@ -43,6 +43,7 @@ if (args.version && !args._[0]) {
         break;
       default:
         const name = args._[0];
+        // 设置了这个 webpackBundleConfig 就会使用 prod 配置
         if (name === 'build') {
           process.env.NODE_ENV = 'production';
         }

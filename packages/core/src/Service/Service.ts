@@ -280,10 +280,11 @@ export default class Service extends EventEmitter {
       pluginAPI.registerMethod({ name, exitsError: false });
     });
 
+    // 返回代理对象，无法通过 api.xx set
     return new Proxy(pluginAPI, {
       get: (target, prop: string) => {
-        // 由于 pluginMethods 需要在 register 阶段可用
-        // 必须通过 proxy 的方式动态获取最新，以实现边注册边使用的效果
+        // 由于 pluginMethods 需要在 register 阶段可用，必须通过 proxy 的方式动态获取最新，以实现边注册边使用的效果
+        // 也就是这里需要动态查找，要么做成 fn，要么用 proxy
         if (this.pluginMethods[prop]) return this.pluginMethods[prop];
         if (
           [
