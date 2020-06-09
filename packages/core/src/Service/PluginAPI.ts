@@ -68,7 +68,10 @@ export default class PluginAPI {
 
     plugins[this.id].enableBy = enableBy || EnableBy.register;
   }
-
+  
+  /**
+   * 注册 plugin hook 到内部数组，执行需要通过 applyPlugins
+   */
   register(hook: IHook) {
     assert(
       hook.key && typeof hook.key === 'string',
@@ -144,6 +147,9 @@ export default class PluginAPI {
     }
   }
 
+  /**
+   * 如果没传 fn，其实就是注册了一个便捷的 alias register 方法，调用时不需要传 key...
+   */
   registerMethod({
     name,
     fn,
