@@ -99,7 +99,7 @@ export default (api: IApi) => {
               });
 
               if (reload) {
-                console.log();
+                // reload 需要重建进程
                 api.logger.info(`Config ${reloadConfigs.join(', ')} changed.`);
                 api.restartServer();
               } else {
@@ -120,6 +120,7 @@ export default (api: IApi) => {
                   }) as any,
                 });
 
+                // 只需要改变文件，webpackDevMiddleware 会监听改变处理
                 if (regenerateTmpFiles) {
                   await generateFiles({ api });
                 } else {
@@ -143,6 +144,7 @@ export default (api: IApi) => {
         bundleConfigs,
         bundleImplementor,
       } = await getBundleAndConfigs({ api, port });
+      // 使用 bundleConfigs 创建启动 webpackDevMiddleware
       const opts: IServerOpts = bundler.setupDevServerOpts({
         bundleConfigs: bundleConfigs,
         bundleImplementor,
@@ -224,6 +226,7 @@ export default (api: IApi) => {
     fn() {
       console.log(chalk.gray(`Try to restart dev server...`));
       destroy();
+      // 向 master 发送重启信号，杀死当前 dev 进程，重新创建 (packages/umi/src/utils/fork.ts)
       process.send?.({ type: 'RESTART' });
     },
   });

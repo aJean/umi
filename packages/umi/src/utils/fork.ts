@@ -44,6 +44,7 @@ export default function start({ scriptPath }: IOpts) {
 
   child.on('message', (data: any) => {
     const type = (data && data.type) || null;
+    // 当文件变化需要 reload 时，dev 进程会发送 RESTART 信号
     if (type === 'RESTART') {
       child.kill();
       start({ scriptPath });

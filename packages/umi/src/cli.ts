@@ -29,11 +29,11 @@ if (args.version && !args._[0]) {
   try {
     switch (args._[0]) {
       case 'dev':
+        // dev 使用守护进程模式启动
         const child = fork({
           scriptPath: require.resolve('./forkedDev'),
         });
-        // ref:
-        // http://nodejs.cn/api/process/signal_events.html
+        // ref: http://nodejs.cn/api/process/signal_events.html
         process.on('SIGINT', () => {
           child.kill('SIGINT');
         });
