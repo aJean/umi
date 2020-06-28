@@ -457,6 +457,7 @@ ${name} from ${plugin.path} register failed.`);
         }
         const tAdd = new AsyncSeriesWaterfallHook(['memo']);
         for (const hook of hooks) {
+          // 跳过插件
           if (!this.isPluginEnable(hook.pluginId!)) {
             continue;
           }

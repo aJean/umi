@@ -171,13 +171,14 @@ export default class PluginAPI {
     this.service.pluginMethods[name] =
       fn ||
       // 这里不能用 arrow function，this 需指向执行此方法的 PluginAPI
-      // 否则 pluginId 会不会，导致不能正确 skip plugin
+      // 否则 pluginId 会不对，导致不能正确 skip plugin
+      // 对每个 插件 init 时候都会创建一个 new PluginAPI 对象，这个 api 对象 的 id 都不同
       function (fn: Function) {
         const hook = {
           key: name,
           ...(utils.lodash.isPlainObject(fn) ? fn : { fn }),
         };
-        // @ts-ignore
+        // 就是这里需要获取 this.id 注册到 this.service.hooksByPluginId
         this.register(hook);
       };
   }
