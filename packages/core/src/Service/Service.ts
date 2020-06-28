@@ -201,8 +201,9 @@ export default class Service extends EventEmitter {
     //   delete this.plugins[pluginId];
     // }
 
-    // hooksByPluginId -> hooks
-    // hooks is mapped with hook key, prepared for applyPlugins()
+    // hooksByPluginId -> hooks，把根据 plugin id 存储的 hook 映射为 key 存储
+    // 因为调用 applyPlugins 是在插件内部，而 plugin id 对插件是不可见的属性
+    // 这里也要注意异步注册的插件是无效的！！
     this.setStage(ServiceStage.initHooks);
     Object.keys(this.hooksByPluginId).forEach((id) => {
       const hooks = this.hooksByPluginId[id];
