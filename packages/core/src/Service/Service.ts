@@ -287,6 +287,7 @@ export default class Service extends EventEmitter {
       get: (target, prop: string) => {
         // 由于 pluginMethods 需要在 register 阶段可用，必须通过 proxy 的方式动态获取最新，以实现边注册边使用的效果
         // 也就是这里需要动态查找，要么做成 fn，要么用 proxy
+        // 我理解主要是因为 service 与 pluginAPI 是两个对象，而且 register 都是注册到 service 上面
         if (this.pluginMethods[prop]) return this.pluginMethods[prop];
         if (
           [
