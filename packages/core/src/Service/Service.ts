@@ -184,25 +184,7 @@ export default class Service extends EventEmitter {
     // we should have the final hooksByPluginId which is added with api.register()
     this.initPresetsAndPlugins();
 
-    // collect false configs, then add to this.skipPluginIds
-    // skipPluginIds include two parts:
-    // 1. api.skipPlugins()
-    // 2. user config with the `false` value
-    // Object.keys(this.hooksByPluginId).forEach(pluginId => {
-    //   const { key } = this.plugins[pluginId];
-    //   if (this.getPluginOptsWithKey(key) === false) {
-    //     this.skipPluginIds.add(pluginId);
-    //   }
-    // });
-
-    // delete hooks from this.hooksByPluginId with this.skipPluginIds
-    // for (const pluginId of this.skipPluginIds) {
-    //   if (this.hooksByPluginId[pluginId]) delete this.hooksByPluginId[pluginId];
-    //   delete this.plugins[pluginId];
-    // }
-
-    // hooksByPluginId -> hooks，把根据 plugin id 存储的 hook 映射为 key 存储
-    // 因为调用 applyPlugins 是在插件内部，而 plugin id 对插件是不可见的属性
+    // hooksByPluginId -> hooks，把根据 plugin id 存储的 hooks 映射为 key 存储
     // 这里也要注意异步注册的插件是无效的！！
     this.setStage(ServiceStage.initHooks);
     Object.keys(this.hooksByPluginId).forEach((id) => {
@@ -255,6 +237,9 @@ export default class Service extends EventEmitter {
     });
   }
 
+  /**
+   * 初始化插件和插件集
+   */
   initPresetsAndPlugins() {
     this.setStage(ServiceStage.initPresets);
     this._extraPlugins = [];
@@ -268,7 +253,7 @@ export default class Service extends EventEmitter {
       this.initPlugin(this._extraPlugins.shift()!);
     }
   }
-
+  
   getPluginAPI(opts: any) {
     const pluginAPI = new PluginAPI(opts);
 
@@ -402,7 +387,10 @@ ${name} from ${plugin.path} register failed.`);
     }
     this.plugins[plugin.id] = plugin;
   }
-
+  
+  /**
+   * 判断插件是否可用
+   */
   isPluginEnable(pluginId: string) {
     // api.skipPlugins() 的插件
     if (this.skipPluginIds.has(pluginId)) return false;

@@ -183,6 +183,9 @@ export default class PluginAPI {
       };
   }
 
+  /**
+   * 设置可以跳过的插件，必须明确知道 id
+   */
   skipPlugins(pluginIds: string[]) {
     pluginIds.forEach((pluginId) => {
       this.service.skipPluginIds.add(pluginId);
