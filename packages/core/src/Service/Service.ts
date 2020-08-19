@@ -184,25 +184,8 @@ export default class Service extends EventEmitter {
     // we should have the final hooksByPluginId which is added with api.register()
     this.initPresetsAndPlugins();
 
-    // collect false configs, then add to this.skipPluginIds
-    // skipPluginIds include two parts:
-    // 1. api.skipPlugins()
-    // 2. user config with the `false` value
-    // Object.keys(this.hooksByPluginId).forEach(pluginId => {
-    //   const { key } = this.plugins[pluginId];
-    //   if (this.getPluginOptsWithKey(key) === false) {
-    //     this.skipPluginIds.add(pluginId);
-    //   }
-    // });
-
-    // delete hooks from this.hooksByPluginId with this.skipPluginIds
-    // for (const pluginId of this.skipPluginIds) {
-    //   if (this.hooksByPluginId[pluginId]) delete this.hooksByPluginId[pluginId];
-    //   delete this.plugins[pluginId];
-    // }
-
-    // hooksByPluginId -> hooks
-    // hooks is mapped with hook key, prepared for applyPlugins()
+    // hooksByPluginId -> hooks，把根据 plugin id 存储的 hooks 映射为 key 存储
+    // 这里也要注意异步注册的插件是无效的！！
     this.setStage(ServiceStage.initHooks);
     Object.keys(this.hooksByPluginId).forEach((id) => {
       const hooks = this.hooksByPluginId[id];
@@ -254,6 +237,9 @@ export default class Service extends EventEmitter {
     });
   }
 
+  /**
+   * 初始化插件和插件集
+   */
   initPresetsAndPlugins() {
     this.setStage(ServiceStage.initPresets);
     this._extraPlugins = [];
@@ -267,7 +253,7 @@ export default class Service extends EventEmitter {
       this.initPlugin(this._extraPlugins.shift()!);
     }
   }
-
+  
   getPluginAPI(opts: any) {
     const pluginAPI = new PluginAPI(opts);
 
@@ -287,6 +273,7 @@ export default class Service extends EventEmitter {
       get: (target, prop: string) => {
         // 由于 pluginMethods 需要在 register 阶段可用，必须通过 proxy 的方式动态获取最新，以实现边注册边使用的效果
         // 也就是这里需要动态查找，要么做成 fn，要么用 proxy
+        // 我理解主要是因为 service 与 pluginAPI 是两个对象，而且 register 都是注册到 service 上面
         if (this.pluginMethods[prop]) return this.pluginMethods[prop];
         if (
           [
@@ -400,7 +387,10 @@ ${name} from ${plugin.path} register failed.`);
     }
     this.plugins[plugin.id] = plugin;
   }
-
+  
+  /**
+   * 判断插件是否可用
+   */
   isPluginEnable(pluginId: string) {
     // api.skipPlugins() 的插件
     if (this.skipPluginIds.has(pluginId)) return false;
@@ -455,6 +445,7 @@ ${name} from ${plugin.path} register failed.`);
         }
         const tAdd = new AsyncSeriesWaterfallHook(['memo']);
         for (const hook of hooks) {
+          // 跳过插件
           if (!this.isPluginEnable(hook.pluginId!)) {
             continue;
           }
