@@ -1,6 +1,10 @@
 import { dirname, join } from 'path';
 import { IServiceOpts, Service as CoreService } from '@umijs/core';
 
+/**
+ * @file 继承 service，在初始化时加载插件集
+ */
+
 class Service extends CoreService {
   constructor(opts: IServiceOpts) {
     process.env.UMI_VERSION = require('../package').version;
