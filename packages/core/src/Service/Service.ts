@@ -135,13 +135,14 @@ export default class Service extends EventEmitter {
       pkg: this.pkg,
       cwd: this.cwd,
     };
+    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id， key, apply }
     this.initialPresets = resolvePresets({
       ...baseOpts,
       presets: opts.presets || [],
       userConfigPresets: this.userConfig.presets || [],
     });
 
-    // 将 path 转化成 plugin obj 保存
+    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id， key, apply }
     this.initialPlugins = resolvePlugins({
       ...baseOpts,
       plugins: opts.plugins || [],
@@ -337,6 +338,7 @@ export default class Service extends EventEmitter {
 
     // 深度优先
     const extraPresets = lodash.clone(this._extraPresets);
+    // 插件内部可能会通过 api.service._extraPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
     this._extraPresets = [];
     while (extraPresets.length) {
       this.initPreset(extraPresets.shift()!);
@@ -530,6 +532,9 @@ ${name} from ${plugin.path} register failed.`);
     return this.runCommand({ name, args });
   }
 
+  /**
+   * 执行命令，因为 ServiceWithBuiltin 会先注册插件，所以这里可以找到注册的命令
+   */
   async runCommand({ name, args = {} }: { name: string; args?: any }) {
     assert(this.stage >= ServiceStage.init, `service is not initialized.`);
 

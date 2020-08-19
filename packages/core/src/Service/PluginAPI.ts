@@ -71,6 +71,9 @@ export default class PluginAPI {
   
   /**
    * 注册 plugin hook 到内部数组，执行需要通过 applyPlugins
+   * 注意这里注册的都是后端插件，并且在注册阶段是以 id 的维度存储的，会在初始化时重构成 key 的存储方式
+   * 运行时插件 在 runtime/src/plugin 里面，直接以 key 的形式存储
+   * 两种时态在 applyPlugin 时的行为是一致的
    */
   register(hook: IHook) {
     assert(
@@ -98,6 +101,7 @@ export default class PluginAPI {
     }
   }
 
+  // 在插件内部再次注册？会在 initPreset 时处理
   registerPresets(presets: (IPreset | string)[]) {
     assert(
       this.service.stage === ServiceStage.initPresets,
@@ -172,7 +176,7 @@ export default class PluginAPI {
       fn ||
       // 这里不能用 arrow function，this 需指向执行此方法的 PluginAPI
       // 否则 pluginId 会不对，导致不能正确 skip plugin
-      // 对每个 插件 init 时候都会创建一个 new PluginAPI 对象，这个 api 对象 的 id 都不同
+      // 对每个 插件 init 时候都会通过 getPluginAPI 创建一个 new PluginAPI 代理对象，并且把 pluginId 传给 api 对象
       function (fn: Function) {
         const hook = {
           key: name,
@@ -184,7 +188,7 @@ export default class PluginAPI {
   }
 
   /**
-   * 设置可以跳过的插件，必须明确知道 id
+   * 通过 id 设置可以跳过的插件
    */
   skipPlugins(pluginIds: string[]) {
     pluginIds.forEach((pluginId) => {
