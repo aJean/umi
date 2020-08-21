@@ -164,6 +164,7 @@ export default (api: IApi) => {
         args: {},
       });
 
+      // 启动 mock server，设置了 cors
       const server = new Server({
         ...opts,
         compress: true,
