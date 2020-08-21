@@ -19,6 +19,7 @@ export default (api: IApi) => {
   let server: Server;
   const unwatchs: Function[] = [];
 
+  // 要把之前注册的监听函数全部注销
   function destroy() {
     for (const unwatch of unwatchs) {
       unwatch();
@@ -50,7 +51,7 @@ export default (api: IApi) => {
       });
       const watch = process.env.WATCH !== 'none';
 
-      // generate files
+      // 执行 generate files 生成中间态文件系统，返回的是注销监听函数
       const unwatchGenerateFiles = await generateFiles({ api, watch });
       if (unwatchGenerateFiles) unwatchs.push(unwatchGenerateFiles);
 
