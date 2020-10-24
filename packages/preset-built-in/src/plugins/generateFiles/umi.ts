@@ -21,6 +21,7 @@ export default function (api: IApi) {
     utils: { Mustache },
   } = api;
 
+  // plugin/registerMethods.ts 注册的针对 key: onGenerateFiles 添加插件的便捷方法
   api.onGenerateFiles(async (args) => {
     const umiTpl = readFileSync(join(__dirname, 'umi.tpl'), 'utf-8');
     const rendererPath = await api.applyPlugins({
