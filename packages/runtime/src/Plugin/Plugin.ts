@@ -40,6 +40,8 @@ export default class Plugin {
   register(plugin: IPlugin) {
     assert(!!plugin.apply, `register failed, plugin.apply must supplied`);
     assert(!!plugin.path, `register failed, plugin.path must supplied`);
+    // apply 就是我们注册的 plugin module 的 exports
+    // 这里是判断我们导出的 key 是不是在 validKeys 中
     Object.keys(plugin.apply).forEach((key) => {
       assert(
         this.validKeys.indexOf(key) > -1,

@@ -3,6 +3,10 @@ import { join, dirname } from 'path';
 import { IApi } from '@umijs/types';
 import { getFile, winPath } from '@umijs/utils';
 
+/**
+ * @file 运行时插件集
+ */
+
 export default function (api: IApi) {
   const {
     paths,
@@ -11,11 +15,14 @@ export default function (api: IApi) {
 
   api.onGenerateFiles(async (args) => {
     const pluginTpl = readFileSync(join(__dirname, 'plugin.tpl'), 'utf-8');
+    // 限制 key，我们的插件必须 export 已经注册的 key
     const validKeys = await api.applyPlugins({
       key: 'addRuntimePluginKey',
       type: api.ApplyPluginsType.add,
+      // 运行时的四大默认配置
       initialValue: ['patchRoutes', 'rootContainer', 'render', 'onRouteChange'],
     });
+
     const plugins = await api.applyPlugins({
       key: 'addRuntimePlugin',
       type: api.ApplyPluginsType.add,
@@ -27,6 +34,8 @@ export default function (api: IApi) {
         })?.path,
       ].filter(Boolean),
     });
+
+    // 写入 .umi 目录，作为 runtime plugin 声明
     api.writeTmpFile({
       path: 'core/plugin.ts',
       content: Mustache.render(pluginTpl, {
@@ -39,6 +48,7 @@ export default function (api: IApi) {
     });
   });
 
+  // 将 .umi/core/plugin.ts 里的所有插件导出到 umi namespace
   api.addUmiExports(() => {
     return {
       specifiers: ['plugin'],
