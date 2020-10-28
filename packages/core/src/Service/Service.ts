@@ -338,7 +338,7 @@ export default class Service extends EventEmitter {
 
     // 深度优先
     const extraPresets = lodash.clone(this._extraPresets);
-    // 插件内部可能会通过 api.service._extraPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
+    // 插件内部可能会通过 api.registerPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
     this._extraPresets = [];
     while (extraPresets.length) {
       this.initPreset(extraPresets.shift()!);
