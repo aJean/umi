@@ -3,6 +3,10 @@ import { join, dirname } from 'path';
 import { IApi } from '@umijs/types';
 import { winPath } from '@umijs/utils';
 
+/**
+ * @file 核心 - 生成 umi 项目的入口文件
+ */
+
 export function importsToStr(
   imports: { source: string; specifier?: string }[],
 ) {

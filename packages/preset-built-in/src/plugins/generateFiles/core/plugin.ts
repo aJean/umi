@@ -4,7 +4,7 @@ import { IApi } from '@umijs/types';
 import { getFile, winPath } from '@umijs/utils';
 
 /**
- * @file 运行时插件集
+ * @file 生成运行时插件集
  */
 
 export default function (api: IApi) {
@@ -23,6 +23,7 @@ export default function (api: IApi) {
       initialValue: ['patchRoutes', 'rootContainer', 'render', 'onRouteChange'],
     });
 
+    // 拿到所有注册的运行时 plugin
     const plugins = await api.applyPlugins({
       key: 'addRuntimePlugin',
       type: api.ApplyPluginsType.add,
@@ -48,7 +49,7 @@ export default function (api: IApi) {
     });
   });
 
-  // 将 .umi/core/plugin.ts 里的所有插件导出到 umi namespace
+  // 导出 umi runtime plugin
   api.addUmiExports(() => {
     return {
       specifiers: ['plugin'],
