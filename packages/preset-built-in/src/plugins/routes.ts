@@ -1,6 +1,11 @@
 import { IApi } from '@umijs/types';
 import { Route } from '@umijs/core';
 
+/**
+ * @file 路由收集，这个插件注册了 getRoutes 方法，在 generateFiles/core/routes.ts 里面使用
+ *       感觉比较绕呀，直接去里面写好了，可能是为了 describe 一个配置吧
+ */
+
 export default function (api: IApi) {
   api.describe({
     key: 'routes',

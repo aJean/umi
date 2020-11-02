@@ -5,6 +5,11 @@ import { IServerOpts, Server } from '@umijs/server';
 import { ConfigType } from '@umijs/bundler-utils';
 import getConfig, { IOpts as IGetConfigOpts } from './getConfig/getConfig';
 
+/**
+ * @file webpack 构建
+ * see preset-built-in/src/plugins/commands/buildDevUtils.ts
+ */
+
 interface IOpts {
   cwd: string;
   config: IConfig;

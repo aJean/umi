@@ -22,6 +22,10 @@ import {
 } from './nodeModulesTransform';
 import resolveDefine from './resolveDefine';
 
+/**
+ * @file 生成基础的 webpack config
+ */
+
 export interface IOpts {
   cwd: string;
   config: IConfig;

@@ -2,6 +2,10 @@ import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { IApi } from '@umijs/types';
 
+/**
+ * @file 能不能直接用 @babel/polyfill ??
+ */
+
 export default (api: IApi) => {
   api.describe({
     key: 'polyfill',

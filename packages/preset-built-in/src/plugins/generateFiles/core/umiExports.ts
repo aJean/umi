@@ -2,6 +2,10 @@ import { IApi } from '@umijs/types';
 import { lodash, winPath } from '@umijs/utils';
 import assert from 'assert';
 
+/**
+ * @file 动态导出 js 模块到全局的 namespace umi
+ */
+
 const reserveLibrarys = ['umi']; // reserve library
 const reserveExportsNames = [
   'Link',

@@ -55,7 +55,9 @@ export default function (api: IApi) {
       assert(
         api.stage >= api.ServiceStage.pluginReady,
         `api.writeTmpFile() should not execute in register stage.`,
-      );
+      )
+
+      // absTmpPath == .umi 目录的绝对路径
       const absPath = join(api.paths.absTmpPath!, path);
       api.utils.mkdirp.sync(dirname(absPath));
       if (!existsSync(absPath) || readFileSync(absPath, 'utf-8') !== content) {

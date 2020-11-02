@@ -31,7 +31,7 @@ export async function getBundleAndConfigs({
     initialValue: undefined,
   });
 
-  // get config
+  // get config， modifyBundleConfigOpts 这玩意怎么他妈的用 ？
   async function getConfig({ type }: { type: ConfigType }) {
     const env: Env = api.env === 'production' ? 'production' : 'development';
     const getConfigOpts = await api.applyPlugins({
@@ -80,6 +80,7 @@ export async function getBundleAndConfigs({
     return await api.applyPlugins({
       type: api.ApplyPluginsType.modify,
       key: 'modifyBundleConfig',
+      // webpack config
       initialValue: await bundler.getConfig(getConfigOpts),
       args: {
         ...bundlerArgs,
