@@ -2,6 +2,11 @@ import { IApi } from '@umijs/types';
 import joi2Types from 'joi2types';
 import joi from '@hapi/joi';
 
+/**
+ * @file api.describe 定义的 config 生成 pluginConfig.d.ts
+ *       然后在 defineConfig 的时候作为参数的类型，对用户配置进行约束
+ */
+
 export default (api: IApi) => {
   api.onGenerateFiles(async () => {
     const { service } = api;

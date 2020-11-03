@@ -62,6 +62,7 @@ export default class PluginAPI {
       plugins[this.id].key = key;
     }
 
+    // 在哪使用的呢？
     if (config) {
       plugins[this.id].config = config;
     }
