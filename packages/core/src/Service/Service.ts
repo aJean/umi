@@ -314,6 +314,7 @@ export default class Service extends EventEmitter {
     // register before apply
     this.registerPlugin(preset);
     // TODO: ...defaultConfigs 考虑要不要支持，可能这个需求可以通过其他渠道实现
+    // 对于集合来说返回的又是一个 path 的数组，比如 preset-built-in/index.ts
     const { presets, plugins, ...defaultConfigs } = apply()(api) || {};
 
     // register extra presets and plugins
@@ -322,7 +323,8 @@ export default class Service extends EventEmitter {
         Array.isArray(presets),
         `presets returned from preset ${id} must be Array.`,
       );
-      // 插到最前面，下个 while 循环优先执行
+      // 因为是集合返回的，所以要插到最前面，下个 while 循环优先执行
+      // 使用 _extraPresets 的目的是不影响 this.initialPresets
       this._extraPresets.splice(
         0,
         0,
