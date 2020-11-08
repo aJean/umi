@@ -56,7 +56,10 @@ class Bundler {
       });
     });
   }
-
+  
+  /**
+   * 用于 preset-built-in/src/plugins/commands/dev/dev.ts，本地开发模式
+   */
   setupDevServerOpts({
     bundleConfigs,
     bundleImplementor = defaultWebpack,

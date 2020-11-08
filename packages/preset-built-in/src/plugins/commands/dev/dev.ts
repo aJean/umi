@@ -56,7 +56,7 @@ export default (api: IApi) => {
       if (unwatchGenerateFiles) unwatchs.push(unwatchGenerateFiles);
 
       if (watch) {
-        // watch pkg changes
+        //监听 npm 包变化
         const unwatchPkg = watchPkg({
           cwd: api.cwd,
           onChange() {
@@ -121,7 +121,8 @@ export default (api: IApi) => {
                   }) as any,
                 });
 
-                // 只需要改变文件，webpackDevMiddleware 会监听改变处理
+                // 文件级改变 webpackDevMiddleware 都监听处理
+                // 但是需要区分是否需要重新生成 tmp
                 if (regenerateTmpFiles) {
                   await generateFiles({ api });
                 } else {
