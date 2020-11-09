@@ -6,7 +6,7 @@ import { ConfigType } from '@umijs/bundler-utils';
 import getConfig, { IOpts as IGetConfigOpts } from './getConfig/getConfig';
 
 /**
- * @file webpack 构建
+ * @file 封装 webpack 构建类
  * see preset-built-in/src/plugins/commands/buildDevUtils.ts
  */
 
@@ -67,6 +67,7 @@ class Bundler {
     bundleConfigs: defaultWebpack.Configuration[];
     bundleImplementor?: typeof defaultWebpack;
   }): IServerOpts {
+    // 如果没有用户定制，就是 webpack
     const compiler = bundleImplementor(bundleConfigs);
     // @ts-ignore
     const compilerMiddleware = webpackDevMiddleware(compiler, {

@@ -314,7 +314,7 @@ export default class Service extends EventEmitter {
     // register before apply
     this.registerPlugin(preset);
     // TODO: ...defaultConfigs 考虑要不要支持，可能这个需求可以通过其他渠道实现
-    // 对于集合来说返回的又是一个 path 的数组，比如 preset-built-in/index.ts
+    // 对于集合来说返回的是一个包含以下属性的对象，比如 preset-built-in/index.ts
     const { presets, plugins, ...defaultConfigs } = apply()(api) || {};
 
     // register extra presets and plugins
@@ -338,7 +338,7 @@ export default class Service extends EventEmitter {
       );
     }
 
-    // 深度优先
+    // 深度优先，先把这次集合返回的插件执行掉，再继续外层的循环
     const extraPresets = lodash.clone(this._extraPresets);
     // 插件内部可能会通过 api.registerPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
     this._extraPresets = [];
