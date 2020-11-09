@@ -71,6 +71,7 @@ export function chunksToFiles(opts: {
 
 export function getHtmlGenerator({ api }: { api: IApi }): any {
   function getDocumentTplPath() {
+    // 就是我们项目 pages 下的 document.ejs，如果没传就使用 core/Html/document.ejs
     const docPath = join(api.paths.absPagesPath!, 'document.ejs');
     return existsSync(docPath) ? docPath : '';
   }
