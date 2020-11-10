@@ -443,13 +443,15 @@ export default async function getConfig(
     });
   }
 
+  // 内部插件的修改 webpack 配置，这里执行的是 applyPlugins chainWebpack
   if (opts.chainWebpack) {
     webpackConfig = await opts.chainWebpack(webpackConfig, {
       webpack: bundleImplementor,
       createCSSRule: createCSSRuleFn,
     });
   }
-  // 用户配置的 chainWebpack 优先级最高
+
+  // 用户配置的 chainWebpack 优先级最高，这里单纯执行 webpackchain
   if (config.chainWebpack) {
     await config.chainWebpack(webpackConfig, {
       env,
