@@ -167,6 +167,7 @@ export default (api: IApi) => {
 
       // 启动 mock server，设置了 cors
       const server = new Server({
+        // 将 bundler 返回的 onListening, onConnection 注入到 server
         ...opts,
         compress: true,
         headers: {

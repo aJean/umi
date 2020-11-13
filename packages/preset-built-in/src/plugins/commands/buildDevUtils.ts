@@ -18,7 +18,8 @@ export async function getBundleAndConfigs({
   api: IApi;
   port?: number;
 }) {
-  // bundler-webpack class，一般不会再扩展这个类了
+  // modify bundler-webpack class，一般不会再扩展这个类了
+  // 可以认为 Bundler == BundlerWebpack
   const Bundler = await api.applyPlugins({
     type: api.ApplyPluginsType.modify,
     key: 'modifyBundler',
@@ -26,6 +27,7 @@ export async function getBundleAndConfigs({
   });
 
   // 可以提供 webpack 的替代品，比如 snowpack、rollup
+  // umi 中 bundleImplementor == webpack
   const bundleImplementor = await api.applyPlugins({
     key: 'modifyBundleImplementor',
     type: api.ApplyPluginsType.modify,
@@ -124,6 +126,7 @@ export async function getBundleAndConfigs({
   };
 }
 
+// 清除临时目录 .umi
 export function cleanTmpPathExceptCache({
   absTmpPath,
 }: {
