@@ -451,7 +451,7 @@ export default async function getConfig(
     });
   }
 
-  // 用户配置的 chainWebpack 优先级最高，这里单纯执行 webpackchain
+  // 用户配置的 chainWebpack 优先级最高，.umirc 中配置的 chainWebpack 函数
   if (config.chainWebpack) {
     await config.chainWebpack(webpackConfig, {
       env,
