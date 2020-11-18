@@ -143,6 +143,7 @@ export default class Service extends EventEmitter {
     });
 
     // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id， key, apply }
+    // .umirc 里面定义的 plugins
     this.initialPlugins = resolvePlugins({
       ...baseOpts,
       plugins: opts.plugins || [],
@@ -204,9 +205,8 @@ export default class Service extends EventEmitter {
       type: ApplyPluginsType.event,
     });
 
-    // get config, including:
-    // 1. merge default config
-    // 2. validate
+    // get config, including: 1. merge default config 2. validate
+    // 先拿到配置项的 default 然后作为 initValue 获取一个完整的 config
     this.setStage(ServiceStage.getConfig);
     const defaultConfig = await this.applyPlugins({
       key: 'modifyDefaultConfig',

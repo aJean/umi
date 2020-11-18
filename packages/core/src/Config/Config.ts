@@ -62,13 +62,13 @@ export default class Config {
   }
 
   /**
-   * 插件 describe 的 default config，就是在这里取出来地 ~
+   * 插件 describe config schema 的时候可以设置 default config，就是在这里取出来地 ~
    * api.describe({id, key, config: {default, scehma }})
    */
   async getDefaultConfig() {
     const pluginIds = Object.keys(this.service.plugins);
 
-    // collect default config
+    // 把插件的 default 合并成一个
     let defaultConfig = pluginIds.reduce((memo, pluginId) => {
       const { key, config = {} } = this.service.plugins[pluginId];
       if ('default' in config) memo[key] = config.default;
@@ -78,6 +78,9 @@ export default class Config {
     return defaultConfig;
   }
 
+  /**
+   * 会拿 defaultValue 和 userConfig 一起合并，验证
+   */
   getConfig({ defaultConfig }: { defaultConfig: object }) {
     assert(
       this.service.stage >= ServiceStage.pluginReady,
