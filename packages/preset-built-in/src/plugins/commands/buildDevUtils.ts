@@ -18,22 +18,26 @@ export async function getBundleAndConfigs({
   api: IApi;
   port?: number;
 }) {
-  // bundler
+  // modify bundler-webpack class，一般不会再扩展这个类了
+  // 可以认为 Bundler == BundlerWebpack
   const Bundler = await api.applyPlugins({
     type: api.ApplyPluginsType.modify,
     key: 'modifyBundler',
     initialValue: DefaultBundler,
   });
 
+  // 可以提供 webpack 的替代品，比如 snowpack、rollup
+  // umi 中 bundleImplementor == webpack
   const bundleImplementor = await api.applyPlugins({
     key: 'modifyBundleImplementor',
     type: api.ApplyPluginsType.modify,
     initialValue: undefined,
   });
 
-  // get config， modifyBundleConfigOpts 这玩意怎么他妈的用 ？
   async function getConfig({ type }: { type: ConfigType }) {
     const env: Env = api.env === 'production' ? 'production' : 'development';
+
+    // 提供修改原始配置的机会，也就是生成 webpack config 之前，传给 getConfig 的参数
     const getConfigOpts = await api.applyPlugins({
       type: api.ApplyPluginsType.modify,
       key: 'modifyBundleConfigOpts',
@@ -61,6 +65,7 @@ export async function getBundleAndConfigs({
             initialValue: opts,
           });
         },
+        // 这些插件的执行时机都是由 bundler-webpack/src/getConfig 决定的
         async chainWebpack(webpackConfig: any, opts: any) {
           return await api.applyPlugins({
             type: api.ApplyPluginsType.modify,
@@ -77,6 +82,8 @@ export async function getBundleAndConfigs({
         type,
       },
     });
+
+    // 这里的 initValue 已经是 toConfig() 转化过的配置了
     return await api.applyPlugins({
       type: api.ApplyPluginsType.modify,
       key: 'modifyBundleConfig',
@@ -91,12 +98,14 @@ export async function getBundleAndConfigs({
 
   const bundler: DefaultBundler = new Bundler({
     cwd: api.cwd,
-    config: api.config,
+    config: api.config, // 这个属性的值就来自 .umirc，再 core/service 里面进行的计算
   });
   const bundlerArgs = {
     env: api.env,
     bundler: { id: Bundler.id, version: Bundler.version },
   };
+
+  // 这是进行打包之前最后一次修改 webpack config 的机会
   const bundleConfigs = await api.applyPlugins({
     type: api.ApplyPluginsType.modify,
     key: 'modifyBundleConfigs',
@@ -117,6 +126,7 @@ export async function getBundleAndConfigs({
   };
 }
 
+// 清除临时目录 .umi
 export function cleanTmpPathExceptCache({
   absTmpPath,
 }: {

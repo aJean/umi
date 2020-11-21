@@ -32,7 +32,7 @@ class Bundler {
     return await getConfig({
       ...opts,
       cwd: this.cwd,
-      config: this.config,
+      config: this.config, // api.config 也就是 core/service 里收集到的用户配置
     });
   }
 

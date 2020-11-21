@@ -62,7 +62,7 @@ export default class PluginAPI {
       plugins[this.id].key = key;
     }
 
-    // 在哪使用的呢？
+    // core/conifg getDefaultConfig 时候会把注册到 plugin 上的 config 都拿出来
     if (config) {
       plugins[this.id].config = config;
     }

@@ -38,6 +38,8 @@ export default (api: IApi) => {
     },
   });
 
+  // 这里就提现了 pluginapi 动态代理的作用，注册完的方法，立刻要使用
+  // 但是我们又不是直接往 api 上面去写入，而是放到 service.pluginMethods 数组里
   api.registerMethod({
     name: 'registerGenerator',
     fn: ({ key, Generator }: IRegisterGenerator) => {

@@ -22,6 +22,10 @@ import {
 import isEqual from './utils/isEqual';
 import mergeDefault from './utils/mergeDefault';
 
+/**
+ * @file 总体来说是用于获取用户配置，在 service 里面初始化，在 buildDevUtils 里面传给 webpack bundler
+ */
+
 const debug = createDebug('umi:core:Config');
 
 interface IChanged {
@@ -57,10 +61,14 @@ export default class Config {
     this.localConfig = opts.localConfig;
   }
 
+  /**
+   * 插件 describe config schema 的时候可以设置 default config，就是在这里取出来地 ~
+   * api.describe({id, key, config: {default, scehma }})
+   */
   async getDefaultConfig() {
     const pluginIds = Object.keys(this.service.plugins);
 
-    // collect default config
+    // 把插件的 default 合并成一个
     let defaultConfig = pluginIds.reduce((memo, pluginId) => {
       const { key, config = {} } = this.service.plugins[pluginId];
       if ('default' in config) memo[key] = config.default;
@@ -70,6 +78,9 @@ export default class Config {
     return defaultConfig;
   }
 
+  /**
+   * 会拿 defaultValue 和 userConfig 一起合并，验证
+   */
   getConfig({ defaultConfig }: { defaultConfig: object }) {
     assert(
       this.service.stage >= ServiceStage.pluginReady,
@@ -137,6 +148,9 @@ export default class Config {
     return userConfig;
   }
 
+  /**
+   * 获取用户配置，就是各种 env、umirc
+   */
   getUserConfig() {
     const configFile = this.getConfigFile();
     this.configFile = configFile;
@@ -145,6 +159,7 @@ export default class Config {
     if (configFile) {
       let envConfigFile;
       if (process.env.UMI_ENV) {
+        // 根据环境变量读取合适的后缀文件，比如 .umirc.prod.ts，不是必须提供，但是设置了没有会报错
         envConfigFile = this.addAffix(configFile, process.env.UMI_ENV);
         if (!existsSync(join(this.cwd, envConfigFile))) {
           throw new Error(
@@ -152,6 +167,8 @@ export default class Config {
           );
         }
       }
+
+      // .umirc 与 .umirc.prod 合并
       const files = [
         configFile,
         envConfigFile,
