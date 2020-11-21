@@ -3,6 +3,10 @@ import { extname, join } from 'path';
 import { matchRoutes, RouteConfig } from 'react-router-config';
 import { getHtmlGenerator } from '../htmlUtils';
 
+/**
+ * @file server 路由中间件，更加可控
+ */
+
 const ASSET_EXTNAMES = ['.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
 
 export default ({
@@ -14,6 +18,7 @@ export default ({
 }) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     async function sendHtml() {
+      // 自己实现 html，不使用 html-webpack-plugin
       const html = getHtmlGenerator({ api });
 
       let route: RouteConfig = { path: req.path };
