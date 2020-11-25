@@ -56,7 +56,7 @@ export default (api: IApi) => {
       if (unwatchGenerateFiles) unwatchs.push(unwatchGenerateFiles);
 
       if (watch) {
-        //监听 npm 包变化
+        // 监听整个用户项目 。。。
         const unwatchPkg = watchPkg({
           cwd: api.cwd,
           onChange() {
