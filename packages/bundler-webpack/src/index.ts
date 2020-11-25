@@ -119,6 +119,8 @@ class Bundler {
       onListening: ({ server }) => {
         function addHooks(compiler: defaultWebpack.Compiler) {
           const { compile, invalid, done } = compiler.hooks;
+
+          // 把状态发到 server，再发到浏览器 ？
           compile.tap('umi-dev-server', () => {
             server.sockWrite({ type: 'invalid' });
           });

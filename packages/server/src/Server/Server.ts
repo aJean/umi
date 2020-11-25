@@ -324,6 +324,9 @@ class Server {
     return this.opts.http2 !== false;
   }
 
+  /**
+   * 这种方式创建是为了可以配置 http 协议
+   */
   createServer() {
     const httpsOpts = this.getHttpsOptions();
     if (httpsOpts) {
@@ -364,7 +367,10 @@ class Server {
       });
     });
   }
-
+  
+  /**
+   * 简单的 websocket 服务
+   */
   createSocketServer() {
     const server = sockjs.createServer({
       log: (severity, line) => {
