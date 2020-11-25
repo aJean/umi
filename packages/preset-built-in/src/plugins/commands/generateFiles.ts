@@ -17,6 +17,7 @@ export default async ({ api, watch }: { api: IApi; watch?: boolean }) => {
 
   await generate();
 
+  // 因为把 add watch 放在了方法内部，所以需要判断是初始化调用，还是触发文件改变时的调用
   if (watch) {
     const watcherPaths = await api.applyPlugins({
       key: 'addTmpGenerateWatcherPaths',
