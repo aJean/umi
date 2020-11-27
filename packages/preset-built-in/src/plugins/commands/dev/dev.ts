@@ -126,6 +126,7 @@ export default (api: IApi) => {
                 if (regenerateTmpFiles) {
                   await generateFiles({ api });
                 } else {
+                  // 只执行插件的 onchange
                   fns.forEach((fn) => fn());
                 }
               }
