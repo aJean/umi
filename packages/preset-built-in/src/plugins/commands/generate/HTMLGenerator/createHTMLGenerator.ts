@@ -5,6 +5,10 @@ import { writeFileSync } from 'fs';
 import { getHtmlGenerator } from '../../htmlUtils';
 import { mkdirp } from '@umijs/utils';
 
+/**
+ * @file 通过命令，生成 dist/index.html
+ */
+
 export default function ({ api }: { api: IApi }) {
   return class PageGenerator extends Generator {
     constructor(opts: any) {

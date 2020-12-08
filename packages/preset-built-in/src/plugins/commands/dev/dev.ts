@@ -29,7 +29,7 @@ export default (api: IApi) => {
 
   const sharedMap = new Map();
   api.onDevCompileDone(({ stats }) => {
-    // store chunks
+    // 存储 webpack 生成的 chunks 给 html generator 使用
     sharedMap.set('chunks', stats.compilation.chunks);
   });
 

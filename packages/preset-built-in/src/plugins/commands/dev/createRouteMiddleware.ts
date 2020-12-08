@@ -29,6 +29,8 @@ export default ({
           route = matchedRoutes[matchedRoutes.length - 1].route;
         }
       }
+
+      // 使用 bundler 生成的 chunks 构建 html
       const content = await html.getContent({
         route,
         chunks: sharedMap.get('chunks'),
@@ -37,6 +39,7 @@ export default ({
       res.send(content);
     }
 
+    // 同时起到代理路由的作用，请求都渲染 html，可以支持 browser history
     if (req.path === '/favicon.ico') {
       res.sendFile(join(__dirname, 'umi.png'));
     } else if (ASSET_EXTNAMES.includes(extname(req.path))) {
