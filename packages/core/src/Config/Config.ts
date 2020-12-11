@@ -184,6 +184,7 @@ export default class Config {
         return memo;
       }, []);
       requireDeps.forEach(cleanRequireCache);
+      // babel register 给 require 加载 ts 的能力
       this.service.babelRegister.setOnlyMap({
         key: 'config',
         value: requireDeps,
