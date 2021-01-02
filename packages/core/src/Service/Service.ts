@@ -135,14 +135,14 @@ export default class Service extends EventEmitter {
       pkg: this.pkg,
       cwd: this.cwd,
     };
-    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id， key, apply }
+    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id，key, apply }
     this.initialPresets = resolvePresets({
       ...baseOpts,
       presets: opts.presets || [],
       userConfigPresets: this.userConfig.presets || [],
     });
 
-    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id， key, apply }
+    // 将 path 转化成 plugin obj 保存，会自动生成唯一 id => { id，key, apply }
     // .umirc 里面定义的 plugins
     this.initialPlugins = resolvePlugins({
       ...baseOpts,
@@ -323,7 +323,7 @@ export default class Service extends EventEmitter {
         Array.isArray(presets),
         `presets returned from preset ${id} must be Array.`,
       );
-      // 因为是集合返回的，所以要插到最前面，下个 while 循环优先执行
+      // presets 的策略是立即执行
       // 使用 _extraPresets 的目的是不影响 this.initialPresets
       this._extraPresets.splice(
         0,
@@ -338,7 +338,6 @@ export default class Service extends EventEmitter {
       );
     }
 
-    // 深度优先，先把这次集合返回的插件执行掉，再继续外层的循环
     const extraPresets = lodash.clone(this._extraPresets);
     // 插件内部可能会通过 api.registerPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
     this._extraPresets = [];
@@ -351,6 +350,7 @@ export default class Service extends EventEmitter {
         Array.isArray(plugins),
         `plugins returned from preset ${id} must be Array.`,
       );
+      // plugins 的策略是延后执行，在 initPresetsAndPlugins 循环里执行
       this._extraPlugins.push(
         ...plugins.map((path: string) => {
           return pathToObj({
