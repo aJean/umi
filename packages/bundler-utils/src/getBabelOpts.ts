@@ -24,6 +24,9 @@ function getBasicBabelLoaderOpts({ cwd }: { cwd: string }) {
   };
 }
 
+/**
+ * 配置 @babel/preset-env
+ */
 export function getBabelPresetOpts(opts: IOpts) {
   return {
     // @ts-ignore

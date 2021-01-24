@@ -160,6 +160,8 @@ export default async function getConfig(
     env,
     targets,
   });
+
+  // 内部插件修改 @babel/preset-env
   if (modifyBabelPresetOpts) {
     presetOpts = await modifyBabelPresetOpts(presetOpts);
   }
