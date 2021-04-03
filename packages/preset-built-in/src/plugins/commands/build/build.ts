@@ -16,7 +16,7 @@ const logger = new Logger('umi:preset-build-in');
 export default function (api: IApi) {
   const {
     paths,
-    utils: { rimraf, chalk },
+    utils: { rimraf },
   } = api;
 
   api.registerCommand({
@@ -51,9 +51,11 @@ export default function (api: IApi) {
           bundleImplementor,
         });
         if (process.env.RM_TMPDIR !== 'none') {
-          rimraf.sync(paths.absTmpPath!);
+          cleanTmpPathExceptCache({
+            absTmpPath: paths.absTmpPath!,
+          });
         }
-        printFileSizes(stats, relative(process.cwd(), paths!.absOutputPath));
+        printFileSizes(stats, relative(process.cwd(), paths.absOutputPath!));
         await api.applyPlugins({
           key: 'onBuildComplete',
           type: api.ApplyPluginsType.event,

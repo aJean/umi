@@ -2,11 +2,12 @@ import { join } from 'path';
 import { EventEmitter } from 'events';
 import assert from 'assert';
 import { BabelRegister, lodash, NodeEnv } from '@umijs/utils';
-import { AsyncSeriesWaterfallHook } from 'tapable';
+import { AsyncSeriesWaterfallHook } from '@umijs/deps/compiled/tapable';
 import { existsSync } from 'fs';
 import Logger from '../Logger/Logger';
 import { pathToObj, resolvePlugins, resolvePresets } from './utils/pluginUtils';
 import loadDotEnv from './utils/loadDotEnv';
+import isPromise from './utils/isPromise';
 import PluginAPI from './PluginAPI';
 import {
   ApplyPluginsType,
@@ -27,6 +28,7 @@ export interface IServiceOpts {
   pkg?: IPackage;
   presets?: string[];
   plugins?: string[];
+  configFiles?: string[];
   env?: NodeEnv;
 }
 
@@ -43,7 +45,7 @@ export default class Service extends EventEmitter {
   pkg: IPackage;
   skipPluginIds: Set<string> = new Set<string>();
   // lifecycle stage
-  stage: ServiceStage = ServiceStage.uninitiialized;
+  stage: ServiceStage = ServiceStage.uninitialized;
   // registered commands
   commands: {
     [name: string]: ICommand | string;
@@ -112,10 +114,15 @@ export default class Service extends EventEmitter {
 
     // get user config without validation
     logger.debug('get user config');
+    const configFiles = opts.configFiles;
     this.configInstance = new Config({
       cwd: this.cwd,
       service: this,
       localConfig: this.env === 'development',
+      configFiles:
+        Array.isArray(configFiles) && !!configFiles[0]
+          ? configFiles
+          : undefined,
     });
     this.userConfig = this.configInstance.getUserConfig();
     logger.debug('userConfig:');
@@ -177,14 +184,14 @@ export default class Service extends EventEmitter {
   loadEnv() {
     const basePath = join(this.cwd, '.env');
     const localPath = `${basePath}.local`;
-    loadDotEnv(basePath);
     loadDotEnv(localPath);
+    loadDotEnv(basePath);
   }
 
   async init() {
     this.setStage(ServiceStage.init);
     // we should have the final hooksByPluginId which is added with api.register()
-    this.initPresetsAndPlugins();
+    await this.initPresetsAndPlugins();
 
     // hooksByPluginId -> hooks，把根据 plugin id 存储的 hooks 映射为 key 存储
     // 这里也要注意异步注册的插件是无效的！！
@@ -200,7 +207,7 @@ export default class Service extends EventEmitter {
 
     // plugin is totally ready
     this.setStage(ServiceStage.pluginReady);
-    this.applyPlugins({
+    await this.applyPlugins({
       key: 'onPluginReady',
       type: ApplyPluginsType.event,
     });
@@ -241,17 +248,17 @@ export default class Service extends EventEmitter {
   /**
    * 初始化插件和插件集
    */
-  initPresetsAndPlugins() {
+  async initPresetsAndPlugins() {
     this.setStage(ServiceStage.initPresets);
     this._extraPlugins = [];
     while (this.initialPresets.length) {
-      this.initPreset(this.initialPresets.shift()!);
+      await this.initPreset(this.initialPresets.shift()!);
     }
 
     this.setStage(ServiceStage.initPlugins);
     this._extraPlugins.push(...this.initialPlugins);
     while (this._extraPlugins.length) {
-      this.initPlugin(this._extraPlugins.shift()!);
+      await this.initPlugin(this._extraPlugins.shift()!);
     }
   }
   
@@ -305,7 +312,15 @@ export default class Service extends EventEmitter {
     });
   }
 
-  initPreset(preset: IPreset) {
+  async applyAPI(opts: { apply: Function; api: PluginAPI }) {
+    let ret = opts.apply()(opts.api);
+    if (isPromise(ret)) {
+      ret = await ret;
+    }
+    return ret || {};
+  }
+
+  async initPreset(preset: IPreset) {
     const { id, key, apply } = preset;
     preset.isPreset = true;
 
@@ -314,8 +329,10 @@ export default class Service extends EventEmitter {
     // register before apply
     this.registerPlugin(preset);
     // TODO: ...defaultConfigs 考虑要不要支持，可能这个需求可以通过其他渠道实现
-    // 对于集合来说返回的是一个包含以下属性的对象，比如 preset-built-in/index.ts
-    const { presets, plugins, ...defaultConfigs } = apply()(api) || {};
+    const { presets, plugins, ...defaultConfigs } = await this.applyAPI({
+      api,
+      apply,
+    });
 
     // register extra presets and plugins
     if (presets) {
@@ -342,7 +359,7 @@ export default class Service extends EventEmitter {
     // 插件内部可能会通过 api.registerPresets 再注册 Presets，不过我觉得没必要在提供这种机制了，反而会麻烦
     this._extraPresets = [];
     while (extraPresets.length) {
-      this.initPreset(extraPresets.shift()!);
+      await this.initPreset(extraPresets.shift()!);
     }
 
     if (plugins) {
@@ -363,14 +380,14 @@ export default class Service extends EventEmitter {
     }
   }
 
-  initPlugin(plugin: IPlugin) {
+  async initPlugin(plugin: IPlugin) {
     const { id, key, apply } = plugin;
 
     const api = this.getPluginAPI({ id, key, service: this });
 
     // register before apply
     this.registerPlugin(plugin);
-    apply()(api);
+    await this.applyAPI({ api, apply });
   }
 
   getPluginOptsWithKey(key: string) {

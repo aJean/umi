@@ -1,13 +1,18 @@
 import { IApi, NextFunction, Request, Response } from '@umijs/types';
+import { Stream } from 'stream';
 import { extname, join } from 'path';
 import { matchRoutes, RouteConfig } from 'react-router-config';
 import { getHtmlGenerator } from '../htmlUtils';
 
-/**
- * @file server 路由中间件，更加可控
- */
-
-const ASSET_EXTNAMES = ['.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+const ASSET_EXTNAMES = [
+  '.ico',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.svg',
+  '.json',
+];
 
 export default ({
   api,
@@ -29,14 +34,29 @@ export default ({
           route = matchedRoutes[matchedRoutes.length - 1].route;
         }
       }
-
-      // 使用 bundler 生成的 chunks 构建 html
-      const content = await html.getContent({
+      const defaultContent = await html.getContent({
         route,
         chunks: sharedMap.get('chunks'),
       });
+      const content = await api.applyPlugins({
+        key: 'modifyDevHTMLContent',
+        type: api.ApplyPluginsType.modify,
+        initialValue: defaultContent,
+        args: {
+          req,
+        },
+      });
       res.setHeader('Content-Type', 'text/html');
-      res.send(content);
+
+      // support stream content
+      if (content instanceof Stream) {
+        content.pipe(res);
+        content.on('end', function () {
+          res.end();
+        });
+      } else {
+        res.send(content);
+      }
     }
 
     // 同时起到代理路由的作用，请求都渲染 html，可以支持 browser history

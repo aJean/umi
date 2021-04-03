@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { IApi } from '@umijs/types';
 import { winPath } from '@umijs/utils';
+import { runtimePath, renderReactPath } from './constants';
 
 /**
  * @file 核心 - 生成 umi 项目的入口文件
@@ -25,13 +26,30 @@ export default function (api: IApi) {
     utils: { Mustache },
   } = api;
 
-  // plugin/registerMethods.ts 注册的针对 key: onGenerateFiles 添加插件的便捷方法
+  const umiVersion = process.env.MFSU_USE_LATEST_UMI
+    ? '3'
+    : process.env.UMI_VERSION;
+  api.addDepInfo(() => {
+    return [
+      {
+        name: '@umijs/runtime',
+        range: umiVersion,
+        alias: [runtimePath],
+      },
+      {
+        name: '@umijs/renderer-react',
+        range: umiVersion,
+        alias: [renderReactPath],
+      },
+    ];
+  });
+
   api.onGenerateFiles(async (args) => {
     const umiTpl = readFileSync(join(__dirname, 'umi.tpl'), 'utf-8');
     const rendererPath = await api.applyPlugins({
       key: 'modifyRendererPath',
       type: api.ApplyPluginsType.modify,
-      initialValue: require.resolve('@umijs/renderer-react'),
+      initialValue: renderReactPath,
     });
     api.writeTmpFile({
       path: 'umi.ts',
@@ -40,10 +58,10 @@ export default function (api: IApi) {
         enableTitle: api.config.title !== false,
         defaultTitle: api.config.title || '',
         rendererPath: winPath(rendererPath),
-        runtimePath: winPath(
-          dirname(require.resolve('@umijs/runtime/package.json')),
-        ),
+        runtimePath,
         rootElement: api.config.mountElementId,
+        enableSSR: !!api.config.ssr,
+        dynamicImport: !!api.config.dynamicImport,
         entryCode: (
           await api.applyPlugins({
             key: 'addEntryCode',

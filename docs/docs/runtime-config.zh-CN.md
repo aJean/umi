@@ -8,6 +8,22 @@
 
 ## 配置项
 
+### modifyClientRenderOpts(fn)
+
+修改 clientRender 参数。
+
+比如在微前端里动态修改渲染根节点：
+
+```js
+let isSubApp = false;
+export function modifyClientRenderOpts(memo) {
+  return {
+    ...memo,
+    rootElement: isSubApp ? 'sub-root' : memo.rootElement,    
+  };
+}
+```
+
 ### patchRoutes({ routes })
 
 修改路由。
@@ -33,14 +49,17 @@ export function patchRoutes({ routes }) {
   merge(routes, extraRoutes);
 }
 
-export function render() {
-  fetch('/api/routes').then((res) => { extraRoutes = res.routes })
+export function render(oldRender) {
+  fetch('/api/routes').then(res=>res.json()).then((res) => { 
+    extraRoutes = res.routes;
+    oldRender();
+  })
 }
 ```
 
 注意：
 
-* 直接 routes，不需要返回
+* 直接修改routes，不需要返回
 
 ### render(oldRender: Function)
 
@@ -54,7 +73,10 @@ import { history } from 'umi';
 export function render(oldRender) {
   fetch('/api/auth').then(auth => {
     if (auth.isLogin) { oldRender() }
-    else { history.push('/login'); }
+    else { 
+      history.push('/login'); 
+      oldRender()
+    }
   });
 }
 ```
@@ -101,4 +123,4 @@ args 包含：
 
 ## 更多配置项
 
-Umi 允许插件注册运行时配置，如果你使用插件，肯定会插件里找到更多运行时的配置项。
+Umi 允许插件注册运行时配置，如果你使用插件，肯定会在插件里找到更多运行时的配置项。

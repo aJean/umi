@@ -1,7 +1,9 @@
 import { IApi } from '@umijs/types';
 import assert from 'assert';
+import { EOL } from 'os';
 import { dirname, join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { isTSFile } from './utils';
 
 export default function (api: IApi) {
   [
@@ -13,8 +15,11 @@ export default function (api: IApi) {
     'onPatchRoutes',
     'onPatchRoutesBefore',
     'onDevCompileDone',
+    'addBeforeMiddlewares',
     'addBeforeMiddewares',
+    'addDepInfo',
     'addDevScripts',
+    'addMiddlewares',
     'addMiddewares',
     'addRuntimePlugin',
     'addRuntimePluginKey',
@@ -41,6 +46,9 @@ export default function (api: IApi) {
     'modifyBabelPresetOpts',
     'modifyBundleImplementor',
     'modifyHTMLChunks',
+    'modifyDevHTMLContent',
+    'modifyExportRouteMap',
+    'modifyProdHTMLContent',
     'modifyPublicPathStr',
     'modifyRendererPath',
     'modifyRoutes',
@@ -51,7 +59,15 @@ export default function (api: IApi) {
 
   api.registerMethod({
     name: 'writeTmpFile',
-    fn({ path, content }: { path: string; content: string }) {
+    fn({
+      path,
+      content,
+      skipTSCheck = true,
+    }: {
+      path: string;
+      content: string;
+      skipTSCheck?: boolean;
+    }) {
       assert(
         api.stage >= api.ServiceStage.pluginReady,
         `api.writeTmpFile() should not execute in register stage.`,
@@ -60,6 +76,10 @@ export default function (api: IApi) {
       // absTmpPath == .umi 目录的绝对路径
       const absPath = join(api.paths.absTmpPath!, path);
       api.utils.mkdirp.sync(dirname(absPath));
+      if (isTSFile(path) && skipTSCheck) {
+        // write @ts-nocheck into first line
+        content = `// @ts-nocheck${EOL}${content}`;
+      }
       if (!existsSync(absPath) || readFileSync(absPath, 'utf-8') !== content) {
         writeFileSync(absPath, content, 'utf-8');
       }

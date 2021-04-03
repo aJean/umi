@@ -71,7 +71,38 @@
 
 ## 动态可选路由
 
-暂不支持。
+约定 `[ $]` 包裹的文件或文件夹为动态可选路由。
+
+比如：
+
+* `src/pages/users/[id$].tsx` 会成为 `/users/:id?`
+* `src/pages/users/[id$]/settings.tsx` 会成为 `/users/:id?/settings`
+
+举个完整的例子，比如以下文件结构，
+
+```bash
+.
+  └── pages
+    └── [post$]
+      └── comments.tsx
+    └── users
+      └── [id$].tsx
+    └── index.tsx
+```
+
+会生成路由配置，
+
+```js
+[
+  { exact: true, path: '/', component: '@/pages/index' },
+  { exact: true, path: '/users/:id?', component: '@/pages/users/[id$]' },
+  {
+    exact: true,
+    path: '/:post?/comments',
+    component: '@/pages/[post$]/comments',
+  },
+];
+```
 
 ## 嵌套路由
 
@@ -187,6 +218,42 @@ export default function(props) {
 ```
 
 这样，如果访问 `/foo`，`/` 和 `/users` 都不能匹配，会 fallback 到 404 路由，通过 `src/pages/404.tsx` 进行渲染。
+
+## 权限路由
+
+通过指定高阶组件 `wrappers` 达成效果。
+
+如下，`src/pages/user`：
+
+```js
+import React from 'react'
+
+function User() {
+  return <>user profile</>
+}
+
+User.wrappers = ['@/wrappers/auth']
+
+export default User
+
+```
+
+然后在 `src/wrappers/auth` 中，
+
+```jsx
+import { Redirect } from 'umi'
+
+export default (props) => {
+  const { isLogin } = useAuth();
+  if (isLogin) {
+    return <div>{ props.children }</div>;
+  } else {
+    return <Redirect to="/login" />;
+  }
+}
+```
+
+这样，访问 `/user`，就通过 `useAuth` 做权限校验，如果通过，渲染 `src/pages/user`，否则跳转到 `/login`，由 `src/pages/login` 进行渲染。
 
 ## 扩展路由属性
 

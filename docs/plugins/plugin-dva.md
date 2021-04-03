@@ -98,10 +98,12 @@ export default {
 
 ### immer
 
-* Type: `boolean`
+* Type: `boolean | object`
 * Default: `false`
 
 表示是否启用 immer 以方便修改 reducer。
+
+注：如需兼容 IE11，需配置 `{ immer: { enableES5: true }}`。
 
 ### hmr
 
@@ -109,6 +111,26 @@ export default {
 * Default: `false`
 
 表示是否启用 dva model 的热更新。
+
+## dva 运行时配置
+
+通过 `src/app.tsx` 文件配置 dva 创建时的参数。
+
+比如：
+
+```ts
+import { createLogger } from 'redux-logger';
+import { message } from 'antd';
+
+export const dva = {
+  config: {
+    onAction: createLogger(),
+    onError(e: Error) {
+      message.error(e.message, 3);
+    },
+  },
+};
+```
 
 ## umi 接口
 

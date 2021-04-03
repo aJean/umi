@@ -7,8 +7,10 @@ export default (api: IApi) => {
       schema(joi) {
         return joi.object({
           fileName: joi.string(),
-          publicPath: joi.string(),
+          // eggjs need
+          publicPath: joi.string().allow(''),
           basePath: joi.string(),
+          writeToFileEmit: joi.boolean(),
         });
       },
     },

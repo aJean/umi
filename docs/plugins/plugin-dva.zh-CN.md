@@ -11,7 +11,7 @@
 包含以下功能，
 
 * **内置 dva**，默认版本是 `^2.6.0-beta.20`，如果项目中有依赖，会优先使用项目中依赖的版本。
-* **约定是到 model 组织方式**，不用手动注册 model
+* **约定式的 model 组织方式**，不用手动注册 model
 * **文件名即 namespace**，model 内如果没有声明 namespace，会以文件名作为 namespace
 * **内置 dva-loading**，直接 connect `loading` 字段使用即可
 * **支持 immer**，通过配置 `immer` 开启
@@ -93,10 +93,12 @@ export default {
 
 ### immer
 
-* Type: `boolean`
+* Type: `boolean | object`
 * Default: `false`
 
 表示是否启用 immer 以方便修改 reducer。
+
+注：如需兼容 IE11，需配置 `{ immer: { enableES5: true }}`。
 
 ### hmr
 
@@ -104,6 +106,26 @@ export default {
 * Default: `false`
 
 表示是否启用 dva model 的热更新。
+
+## dva 运行时配置
+
+通过 `src/app.tsx` 文件配置 dva 创建时的参数。
+
+比如：
+
+```ts
+import { createLogger } from 'redux-logger';
+import { message } from 'antd';
+
+export const dva = {
+  config: {
+    onAction: createLogger(),
+    onError(e: Error) {
+      message.error(e.message, 3);
+    },
+  },
+};
+```
 
 ## umi 接口
 

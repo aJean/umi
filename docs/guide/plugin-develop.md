@@ -4,6 +4,7 @@ translateHelp: true
 
 # 插件开发
 
+
 在 Umi 中，插件实际上就是一个 JS 模块，你需要定义一个插件的初始化方法并默认导出。如下示例：
 
 ```js
@@ -100,7 +101,7 @@ export default function (api: IApi) {
 }
 ```
 
-为我们的插件增加一个配，使用 [describe](/plugins/api#describe-id-string-key-string-config--default-schema-onchange--) 注册配置。
+为我们的插件增加一个配置，使用 [describe](/plugins/api#describe-id-string-key-string-config--default-schema-onchange--) 注册配置。
 
 ```ts
   api.describe({
@@ -123,7 +124,7 @@ export default function (api: IApi) {
   }
 ```
 
-> 这里需要注意的是，我们在判断是取的是 api.userConfig，而在 api 的回调中使用的是 api.config，你可以理解为 api.userConfig 是配置中的值， api.config 是插件修改后的值，这里可以是任意插件修改。
+> 这里需要注意的是，我们在判断时取的是 api.userConfig，而在 api 的回调中使用的是 api.config，你可以理解为 api.userConfig 是配置中的值， api.config 是插件修改后的值，这里可以是任意插件修改。
 
 在演示中使用我们的插件：
 

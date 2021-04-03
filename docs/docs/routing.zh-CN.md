@@ -34,7 +34,7 @@ export default {
 ### exact
 
 * Type: `boolean`
-* Default: `false`
+* Default: `true`
 
 表示是否严格匹配，即 location 是否和 path 完全对应上。
 
@@ -128,12 +128,14 @@ export default {
 然后在 `src/wrappers/auth` 中，
 
 ```jsx
+import { Redirect } from 'umi'
+
 export default (props) => {
   const { isLogin } = useAuth();
   if (isLogin) {
     return <div>{ props.children }</div>;
   } else {
-    redirectTo('/login');
+    return <Redirect to="/login" />;
   }
 }
 ```
@@ -196,9 +198,10 @@ export default () => (
 路由组件可通过 `props` 获取到以下属性，
 
 * match，当前路由和 url match 后的对象，包含 `params`、`path`、`url` 和 `isExact` 属性
-* location，表示应用当前出于哪个位置，包含 `pathname`、`search`、`query` 等属性
+* location，表示应用当前处于哪个位置，包含 `pathname`、`search`、`query` 等属性
 * history，同 [api#history](../api#history) 接口
 * route，当前路由配置，包含 `path`、`exact`、`component`、`routes` 等
+* routes，全部路由信息
 
 比如：
 

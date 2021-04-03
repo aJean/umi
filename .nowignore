@@ -2,9 +2,11 @@
 node_modules
 .umi
 .github
+/docs
+/examples
 scripts
 packages
 e2e
-docs
 scripts
 !dist
+

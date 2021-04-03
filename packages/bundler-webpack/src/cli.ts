@@ -1,3 +1,4 @@
+import { BundlerConfigType } from '@umijs/types';
 import {
   BabelRegister,
   chalk,
@@ -7,7 +8,6 @@ import {
   rimraf,
   yParser,
 } from '@umijs/utils';
-import { ConfigType } from '@umijs/bundler-utils';
 import { basename, extname, join } from 'path';
 import { Server } from '@umijs/server';
 import assert from 'assert';
@@ -73,9 +73,10 @@ if (args.version && !command) {
     config,
   });
 
+  // @ts-ignore
   const webpackConfig = await bundler.getConfig({
     env,
-    type: ConfigType.csr,
+    type: BundlerConfigType.csr,
     hot: args.hot,
     entry: config.entry || {
       [basename(entry, extname(entry))]: entry,
@@ -92,6 +93,7 @@ if (args.version && !command) {
     const port = await portfinder.getPortPromise({
       port: 8000,
     });
+    // @ts-ignore
     webpackConfig.plugins!.push(new DevCompileDonePlugin({ port }));
     const devServerOpts = bundler.setupDevServerOpts({
       bundleConfigs: [webpackConfig],

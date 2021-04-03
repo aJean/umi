@@ -1,10 +1,11 @@
 import Config from 'webpack-chain';
-import { IConfig } from '@umijs/types';
+import { IConfig, IBundlerConfigType, BundlerConfigType } from '@umijs/types';
 // @ts-ignore
 import safePostCssParser from 'postcss-safe-parser';
 import { deepmerge } from '@umijs/utils';
 
 interface IOpts {
+  type: IBundlerConfigType;
   webpackConfig: Config;
   config: IConfig;
   isDev: boolean;
@@ -23,6 +24,7 @@ interface ICreateCSSRuleOpts extends IOpts {
 
 export function createCSSRule({
   webpackConfig,
+  type,
   config,
   lang,
   test,
@@ -41,7 +43,7 @@ export function createCSSRule({
     if (config.styleLoader) {
       rule
         .use('style-loader')
-        .loader(require.resolve('style-loader'))
+        .loader(require.resolve('@umijs/deps/compiled/style-loader'))
         .options(
           deepmerge(
             {
@@ -51,32 +53,38 @@ export function createCSSRule({
           ),
         );
     } else {
-      rule
-        .use('extract-css-loader')
-        .loader(
-          miniCSSExtractPluginLoaderPath ||
-            require.resolve('mini-css-extract-plugin/dist/loader'),
-        )
-        .options({
-          publicPath: './',
-          hmr: isDev,
-        });
+      if (type === BundlerConfigType.csr && !config.styleLoader) {
+        rule
+          .use('extract-css-loader')
+          .loader(
+            miniCSSExtractPluginLoaderPath ||
+              require('../webpack/plugins/mini-css-extract-plugin').loader,
+          )
+          .options({
+            publicPath: './',
+            hmr: isDev,
+          });
+      }
     }
 
     if (isDev && isCSSModules && config.cssModulesTypescriptLoader) {
       rule
         .use('css-modules-typescript-loader')
-        .loader(require.resolve('css-modules-typescript-loader'))
+        .loader(
+          require.resolve('@umijs/deps/compiled/css-modules-typescript-loader'),
+        )
         .options(config.cssModulesTypescriptLoader);
     }
 
     rule
       .use('css-loader')
-      .loader(require.resolve('css-loader'))
+      .loader(require.resolve('@umijs/deps/compiled/css-loader'))
       .options(
         deepmerge(
           {
             importLoaders: 1,
+            // https://webpack.js.org/loaders/css-loader/#onlylocals
+            ...(type === BundlerConfigType.ssr ? { onlyLocals: true } : {}),
             ...(isCSSModules
               ? {
                   modules: {
@@ -104,10 +112,13 @@ export function createCSSRule({
               // https://github.com/csstools/postcss-preset-env
               require('postcss-preset-env')({
                 // TODO: set browsers
-                autoprefixer: {
-                  ...config.autoprefixer,
-                  overrideBrowserslist: browserslist,
-                },
+                autoprefixer:
+                  type === BundlerConfigType.ssr
+                    ? false
+                    : {
+                        ...config.autoprefixer,
+                        overrideBrowserslist: browserslist,
+                      },
                 // https://cssdb.org/
                 stage: 3,
               }),
@@ -128,6 +139,7 @@ export function createCSSRule({
 }
 
 export default function ({
+  type,
   config,
   webpackConfig,
   isDev,
@@ -138,6 +150,7 @@ export default function ({
 }: IOpts) {
   // css
   createCSSRule({
+    type,
     webpackConfig,
     config,
     isDev,
@@ -150,12 +163,13 @@ export default function ({
   // less
   const theme = config.theme;
   createCSSRule({
+    type,
     webpackConfig,
     config,
     isDev,
     lang: 'less',
     test: /\.(less)(\?.*)?$/,
-    loader: 'less-loader',
+    loader: require.resolve('@umijs/deps/compiled/less-loader'),
     options: deepmerge(
       {
         modifyVars: theme,
@@ -170,34 +184,43 @@ export default function ({
   // extract css
   if (!config.styleLoader) {
     const hash = !isDev && config.hash ? '.[contenthash:8]' : '';
-    webpackConfig
-      .plugin('extract-css')
-      .use(
-        miniCSSExtractPluginPath || require.resolve('mini-css-extract-plugin'),
-        [
-          {
-            filename: `[name]${hash}.css`,
-            chunkFilename: `[name]${hash}.chunk.css`,
-            ignoreOrder: true,
-          },
-        ],
-      );
+    // only csr generator css files
+    if (type === BundlerConfigType.csr) {
+      webpackConfig
+        .plugin('extract-css')
+        .use(
+          miniCSSExtractPluginPath ||
+            require.resolve('../webpack/plugins/mini-css-extract-plugin'),
+          [
+            {
+              filename: `[name]${hash}.css`,
+              chunkFilename: `[name]${hash}.chunk.css`,
+              ignoreOrder: true,
+            },
+          ],
+        );
+    }
   }
 
   if (!isDev && !disableCompress) {
     webpackConfig
       .plugin('optimize-css')
-      .use(require.resolve('optimize-css-assets-webpack-plugin'), [
-        {
-          cssProcessorOptions: {
-            // https://github.com/postcss/postcss-safe-parser
-            // TODO: 待验证功能
-            parser: safePostCssParser,
+      .use(
+        require.resolve(
+          '@umijs/deps/compiled/optimize-css-assets-webpack-plugin',
+        ),
+        [
+          {
+            cssProcessorOptions: {
+              // https://github.com/postcss/postcss-safe-parser
+              // TODO: 待验证功能
+              parser: safePostCssParser,
+            },
+            cssProcessorPluginOptions: {
+              preset: ['default', config.cssnano],
+            },
           },
-          cssProcessorPluginOptions: {
-            preset: ['default', config.cssnano],
-          },
-        },
-      ]);
+        ],
+      );
   }
 }

@@ -68,6 +68,15 @@ const ObjectResolver: IResolver<t.ObjectExpression> = {
   },
 };
 
+const ClassResolver: IResolver<t.Class> = {
+  is(src) {
+    return t.isClass(src);
+  },
+  get(src) {
+    return findClassStaticProperty(src);
+  },
+};
+
 const ArrayLiteralResolver: IResolver<t.ArrayExpression> = {
   is(src) {
     return t.isArrayExpression(src);
@@ -122,6 +131,7 @@ export const NODE_RESOLVERS = [
   UndefinedResolver,
   ObjectResolver,
   ArrayResolver,
+  ClassResolver,
   FunctionResolver,
   ArrowFunctionResolver,
 ];
@@ -146,13 +156,46 @@ export function findObjectMembers(node: t.ObjectExpression) {
   node.properties.forEach((p) => {
     if (t.isObjectMember(p) && t.isIdentifier(p.key)) {
       if (t.isObjectMethod(p)) {
-        target[p.key.name] = () => {};
+        target[(p.key as any).name] = () => {};
       } else {
         const resolver = NODE_RESOLVERS.find((resolver) =>
           resolver.is(p.value),
         );
         if (resolver) {
-          target[p.key.name] = resolver.get(p.value as any);
+          target[(p.key as any).name] = resolver.get(p.value as any);
+        }
+      }
+    }
+  });
+  return target;
+}
+
+export function findClassStaticProperty(node: t.Class) {
+  function isStaticNode(
+    p: any,
+  ): p is
+    | t.ClassMethod
+    | t.ClassPrivateMethod
+    | t.ClassProperty
+    | t.ClassPrivateProperty
+    | t.TSDeclareMethod {
+    return 'static' in p && p.static === true;
+  }
+
+  let body = node.body;
+  if (!t.isClassBody(body)) return;
+
+  const target = {};
+  body.body.forEach((p) => {
+    if (isStaticNode(p) && t.isIdentifier(p.key)) {
+      if (t.isMethod(p) || t.isTSDeclareMethod(p)) {
+        target[(p.key as t.Identifier).name] = () => {};
+      } else {
+        const resolver = NODE_RESOLVERS.find((resolver) =>
+          resolver.is(p.value),
+        );
+        if (resolver) {
+          target[(p.key as t.Identifier).name] = resolver.get(p.value as any);
         }
       }
     }

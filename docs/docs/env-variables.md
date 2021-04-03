@@ -4,7 +4,6 @@ translateHelp: true
 
 # Env Variables
 
-
 ## 设置环境变量
 
 ### 执行命令时添加
@@ -49,13 +48,13 @@ $ umi dev
 
 按字母排序。
 
-### APP\_ROOT
+### APP_ROOT
 
 指定项目根目录。
 
 注意：
 
-* APP\_ROOT 不能配在 `.env` 中，只能在命令行里添加
+- APP_ROOT 不能配在 `.env` 中，只能在命令行里添加
 
 ### ANALYZE
 
@@ -69,11 +68,15 @@ $ ANALYZE=1 umi dev
 $ ANALYZE=1 umi build
 ```
 
+### ANALYZE_SSR
+
+对服务端包大小的分析，默认关闭，具体见 [服务端渲染#包大小分析](/zh-CN/docs/ssr#包大小分析)。
+
 ### BABEL_CACHE
 
 默认开启 Babel 编译缓存，值为 none 时禁用缓存。
 
-### BABEL\_POLYFILL
+### BABEL_POLYFILL
 
 默认会根据 targets 配置打目标浏览器的全量补丁，设置为 `none` 禁用内置的补丁方案。
 
@@ -96,6 +99,16 @@ $ FORK_TS_CHECKER=1 umi dev
 ```bash
 $ FRIENDLY_ERROR=none umi dev
 ```
+
+### HTTPS
+
+localhost 开启 [https](https://baike.baidu.com/item/https/285356)
+
+```bash
+$ HTTPS=1 umi dev
+```
+
+同时也可以使用配置 `https: { key: '/path/key.pem', cert: '/path/cert.pem' }` 自定义证书。
 
 ### HMR
 
@@ -129,6 +142,14 @@ $ PROGRESS=none umi dev
 $ SOCKET_SERVER=https://localhost:7001/ umi dev
 ```
 
+### SPEED_MEASURE
+
+分析 Webpack 编译时间，支持 `CONSOLE` 和 `JSON` 两种格式，默认是 `JSON`。
+
+```bash
+$ SPEED_MEASURE=CONSOLE umi dev
+```
+
 ### TERSER_CACHE
 
 默认开启 Terser 压缩缓存，值为 none 时禁用缓存。
@@ -156,3 +177,23 @@ WATCH_IGNORED=none umi dev
 # node_modules 下除 lodash 和 umi 监听，其他忽略
 WATCH_IGNORED=node_modules/(?!(lodash|umi)) umi dev
 ```
+
+### WEBPACK_FS_CACHE
+
+Disable fs cache of webpack 5.
+
+```bash
+$ WEBPACK_FS_CACHE=none umi dev
+```
+
+### WEBPACK_PROFILE
+
+生成 umi 构建性能分析文件 `dist/stats.json`，结合 [Webpack Xray](https://akx.github.io/webpack-xray) 或 [Webapck Analyse](http://webpack.github.io/analyse) ，`WEBPACK_PROFILE` 值有 `verbose`、`normal`、`minimal`。比如：
+
+```bash
+$ WEBPACK_PROFILE=verbose umi build
+```
+
+### RM_SERVER_FILE
+
+预渲染下，默认会默认删除服务端渲染文件 `umi.server.js`，如果希望保留，使用 `RM_SERVER_FILE=none`。

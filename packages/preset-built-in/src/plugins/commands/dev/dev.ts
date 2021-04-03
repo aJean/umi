@@ -1,4 +1,4 @@
-import { IApi } from '@umijs/types';
+import { IApi, BundlerConfigType } from '@umijs/types';
 import { IServerOpts, Server } from '@umijs/server';
 import { delay } from '@umijs/utils';
 import assert from 'assert';
@@ -9,7 +9,6 @@ import { watchPkg } from './watchPkg';
 
 export default (api: IApi) => {
   const {
-    env,
     paths,
     utils: { chalk, portfinder },
   } = api;
@@ -28,8 +27,12 @@ export default (api: IApi) => {
   }
 
   const sharedMap = new Map();
-  api.onDevCompileDone(({ stats }) => {
-    // 存储 webpack 生成的 chunks 给 html generator 使用
+  api.onDevCompileDone(({ stats, type }) => {
+    // don't need ssr bundler chunks
+    if (type === BundlerConfigType.ssr) {
+      return;
+    }
+    // store client build chunks
     sharedMap.set('chunks', stats.compilation.chunks);
   });
 
@@ -38,13 +41,18 @@ export default (api: IApi) => {
     description: 'start a dev server for development',
     fn: async function ({ args }) {
       const defaultPort =
+        // @ts-ignore
         process.env.PORT || args?.port || api.config.devServer?.port;
       port = await portfinder.getPortPromise({
         port: defaultPort ? parseInt(String(defaultPort), 10) : 8000,
       });
+      // @ts-ignore
       hostname = process.env.HOST || api.config.devServer?.host || '0.0.0.0';
       console.log(chalk.cyan('Starting the development server...'));
       process.send?.({ type: 'UPDATE_PORT', port });
+
+      // enable https, HTTP/2 by default when using --https
+      const isHTTPS = process.env.HTTPS || args?.https;
 
       cleanTmpPathExceptCache({
         absTmpPath: paths.absTmpPath!,
@@ -153,24 +161,39 @@ export default (api: IApi) => {
         bundleImplementor,
       });
 
-      const beforeMiddlewares = await api.applyPlugins({
-        key: 'addBeforeMiddewares',
-        type: api.ApplyPluginsType.add,
-        initialValue: [],
-        args: {},
-      });
-      const middlewares = await api.applyPlugins({
-        key: 'addMiddewares',
-        type: api.ApplyPluginsType.add,
-        initialValue: [],
-        args: {},
-      });
+      const beforeMiddlewares = [
+        ...(await api.applyPlugins({
+          key: 'addBeforeMiddewares',
+          type: api.ApplyPluginsType.add,
+          initialValue: [],
+          args: {},
+        })),
+        ...(await api.applyPlugins({
+          key: 'addBeforeMiddlewares',
+          type: api.ApplyPluginsType.add,
+          initialValue: [],
+          args: {},
+        })),
+      ];
+      const middlewares = [
+        ...(await api.applyPlugins({
+          key: 'addMiddewares',
+          type: api.ApplyPluginsType.add,
+          initialValue: [],
+          args: {},
+        })),
+        ...(await api.applyPlugins({
+          key: 'addMiddlewares',
+          type: api.ApplyPluginsType.add,
+          initialValue: [],
+          args: {},
+        })),
+      ];
 
-      // 启动 mock server，设置了 cors
-      const server = new Server({
-        // 将 bundler 返回的 onListening, onConnection 注入到 server
+      server = new Server({
         ...opts,
         compress: true,
+        https: !!isHTTPS,
         headers: {
           'access-control-allow-origin': '*',
         },
@@ -188,6 +211,7 @@ export default (api: IApi) => {
       });
       return {
         ...listenRet,
+        compilerMiddleware: opts.compilerMiddleware,
         destroy,
       };
     },
@@ -196,8 +220,9 @@ export default (api: IApi) => {
   api.registerMethod({
     name: 'getPort',
     fn() {
+      // access env when method be called, to allow other plugin run dev command manually
       assert(
-        env === 'development',
+        api.env === 'development',
         `api.getPort() is only valid in development.`,
       );
       return port;
@@ -208,7 +233,7 @@ export default (api: IApi) => {
     name: 'getHostname',
     fn() {
       assert(
-        env === 'development',
+        api.env === 'development',
         `api.getHostname() is only valid in development.`,
       );
       return hostname;
@@ -219,7 +244,7 @@ export default (api: IApi) => {
     name: 'getServer',
     fn() {
       assert(
-        env === 'development',
+        api.env === 'development',
         `api.getServer() is only valid in development.`,
       );
       return server;

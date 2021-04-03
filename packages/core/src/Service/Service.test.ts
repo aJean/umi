@@ -434,6 +434,20 @@ test('plugin syntax error', async () => {
   await expect(service.init()).rejects.toThrow(/Register plugin .+? failed/);
 });
 
+test('async plugin register', async () => {
+  const cwd = join(fixtures, 'asyncPluginRegister');
+  const service = new Service({
+    cwd,
+    plugins: [require.resolve(join(cwd, 'foo'))],
+  });
+  await service.init();
+  const c1 = await service.applyPlugins({
+    key: 'count',
+    type: service.ApplyPluginsType.add,
+  });
+  expect(c1).toEqual(['foo']);
+});
+
 test('enableBy', async () => {
   const cwd = join(fixtures, 'enableBy');
   const service = new Service({
@@ -513,4 +527,21 @@ test('resolvePackage with APP_ROOT specified', () => {
     pkg: require(join(repoRoot, 'package.json')),
   });
   expect(service.pkg.name).toEqual('foo');
+});
+
+test('path no string', () => {
+  const cwd = join(fixtures, 'no-package-json');
+
+  // 'as any' for ignore ts
+  const path = ['umi-plugin-dva', { immer: true }] as any;
+  expect(() => {
+    new Service({
+      cwd,
+      plugins: [path],
+    });
+  }).toThrow(
+    `Plugin resolved failed, Please check your plugins config, it must be array of string.\nError Plugin Config: ${JSON.stringify(
+      path,
+    )}`,
+  );
 });

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { join } from 'path';
 import { Logger } from '@umijs/core';
-import immer from 'immer';
+import immer from '@umijs/deps/compiled/immer';
 import { IServerOpts, IHttps } from './Server';
 
 const logger = new Logger('@umijs/server:utils');
@@ -12,6 +12,7 @@ export const getCredentials = (opts: IServerOpts): IHttps => {
     key: join(__dirname, 'cert', 'key.pem'),
     cert: join(__dirname, 'cert', 'cert.pem'),
   };
+  // custom cert using https: { key: '', cert: '' }
   const serverOptions = (https === true
     ? defautlServerOptions
     : https) as IHttps;
@@ -28,9 +29,9 @@ export const getCredentials = (opts: IServerOpts): IHttps => {
       key: fs.readFileSync(serverOptions?.key as string, 'utf-8'),
       cert: fs.readFileSync(serverOptions?.cert as string, 'utf-8'),
     },
-    (draft) => {
+    (draft: any) => {
       if (typeof serverOptions === 'object' && serverOptions.ca) {
-        const newServerOptions = immer(serverOptions, (optDraft) => {
+        const newServerOptions = immer(serverOptions, (optDraft: any) => {
           // @ts-ignore
           optDraft.ca = !Array.isArray(optDraft.ca)
             ? [optDraft.ca]

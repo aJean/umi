@@ -32,6 +32,21 @@ test('esm', () => {
   expect(code).toContain(`import { a } from './a';`);
 });
 
+test('typescript 4.2 abstract Construct Signatures', () => {
+  const code = transformWithPreset(
+    `
+abstract class Shape {
+    abstract getArea(): number;
+}
+  `,
+    {
+      typescript: true,
+    },
+  );
+  expect(code).toContain(`var Shape = function Shape() {`);
+  expect(code).toContain(`_classCallCheck(this, Shape);`);
+});
+
 test('typescript', () => {
   const code = transformWithPreset(
     `
@@ -56,6 +71,72 @@ test('typescript with namespace', () => {
     },
   );
   expect(code).toContain(`var V = _N.V = 1;`);
+});
+
+test('typescript with metadata', () => {
+  const code = transformWithPreset(
+    `@Decorate
+    class MyClass {
+      constructor(
+        private generic: Generic<A>,
+        generic2: Generic<A, B>
+      ) {}
+
+      @Run
+      method(
+        generic: Inter<A>,
+        @Arg() generic2: InterGen<A, B>
+      ) {}
+    }`,
+    {
+      typescript: true,
+    },
+  );
+  expect(code).toContain('Reflect.metadata');
+});
+
+test('typescript with nest-injection', () => {
+  const code = transformWithPreset(
+    `import { AppService } from './app.service';
+
+    @Controller()
+    export class AppController {
+      constructor(private appService: AppService) {}
+
+      @Inject()
+      appService: AppService;
+
+      @Inject()
+      private appService2: AppService;
+
+      @Get()
+      getHello(): string {
+        return this.appService.getHello();
+      }
+    }`,
+    {
+      typescript: true,
+    },
+  );
+  expect(code).toContain('Reflect.metadata');
+  expect(code).toContain(
+    '_initializerDefineProperty(this, "appService", _descriptor, this);',
+  );
+  expect(code).toContain(
+    '_initializerDefineProperty(this, "appService2", _descriptor2, this);',
+  );
+});
+
+test('typescript key remapping types', () => {
+  const code = transformWithPreset(
+    `type Options = {
+      [K in "noImplicitAny" | "strictNullChecks" | "strictFunctionTypes"]?: boolean
+    };`,
+    {
+      typescript: true,
+    },
+  );
+  expect(code).toContain('"use strict"');
 });
 
 test('dynamic import', () => {
@@ -229,6 +310,19 @@ test('babel-plugin-auto-css-modules', () => {
   );
 });
 
+test('babel-plugin-import-to-await-require', () => {
+  const code = transformWithPreset(`import { Button } from 'antd';foo;`, {
+    env: {
+      targets: { ie: 10 },
+    },
+    importToAwaitRequire: {
+      libs: ['antd'],
+      remoteName: 'foo',
+    },
+  });
+  expect(code).toContain(`} = await import("foo/antd");`);
+});
+
 test('svgr', () => {
   const code = transformWithPreset(
     `import { ReactComponent } from './a.svg';`,
@@ -239,5 +333,54 @@ test('svgr', () => {
       svgr: {},
     },
   );
-  expect(winPath(code!)).toContain(`index.js?-svgo,+titleProp,+ref!./a.svg");`);
+  expect(winPath(code!)).toContain(
+    `svgr-webpack.js?-svgo,+titleProp,+ref!./a.svg");`,
+  );
+});
+
+test('logical assignment operators', () => {
+  const code = transformWithPreset(`a ||= b;`, {
+    env: {
+      targets: { ie: 10 },
+    },
+  });
+  expect(winPath(code!)).toContain(`a || (a = b);`);
+});
+
+test('top level await', () => {
+  const code = transformWithPreset(`await delay(1000);`, {
+    env: {
+      targets: { ie: 10 },
+    },
+  });
+  expect(code).toContain(`await delay(1000);`);
+});
+
+test('record', () => {
+  const code = transformWithPreset(`#{ x: 1, y: 2 }`, {
+    env: {
+      targets: { ie: 10 },
+    },
+  });
+  expect(code).toContain(`\"use strict\";
+
+var _recordTuplePolyfill = require(\"@umijs/deps/reexported/record-tuple-polyfill\");
+
+(0, _recordTuplePolyfill.Record)({
+  x: 1,
+  y: 2
+});`);
+});
+
+test('tuple', () => {
+  const code = transformWithPreset(`#[1, 2, 3];`, {
+    env: {
+      targets: { ie: 10 },
+    },
+  });
+  expect(code).toContain(`\"use strict\";
+
+var _recordTuplePolyfill = require(\"@umijs/deps/reexported/record-tuple-polyfill\");
+
+(0, _recordTuplePolyfill.Tuple)(1, 2, 3);`);
 });

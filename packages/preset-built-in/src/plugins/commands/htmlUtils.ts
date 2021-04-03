@@ -1,4 +1,4 @@
-import { IApi, IRoute, webpack } from '@umijs/types';
+import { IApi, IRoute, webpack, IBundlerConfigType } from '@umijs/types';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 import { lodash } from '@umijs/utils';
@@ -6,6 +6,7 @@ import assert from 'assert';
 
 interface IGetContentArgs {
   route: IRoute;
+  assets?: any;
   chunks?: any;
   noChunk?: boolean;
 }
@@ -106,6 +107,9 @@ export function getHtmlGenerator({ api }: { api: IApi }): any {
         publicPathStr = `location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + window.routerBase`;
       }
 
+      // window.resourceBaseUrl 用来兼容 egg.js 项目注入的 publicPath
+      publicPathStr = `window.resourceBaseUrl || ${publicPathStr};`;
+
       publicPathStr = await api.applyPlugins({
         key: 'modifyPublicPathStr',
         type: api.ApplyPluginsType.modify,
@@ -121,6 +125,8 @@ export function getHtmlGenerator({ api }: { api: IApi }): any {
         initialValue: api.config.chunks || ['umi'],
         args: {
           route: args.route,
+          assets: args.assets,
+          chunks: args.chunks,
         },
       });
       const { cssFiles, jsFiles, headJSFiles } = chunksToFiles({
@@ -192,6 +198,10 @@ export function getHtmlGenerator({ api }: { api: IApi }): any {
   return new Html();
 }
 
+/**
+ * flatten routes using routes config
+ * @param opts
+ */
 export function getFlatRoutes(opts: { routes: IRoute[] }): IRoute[] {
   return opts.routes.reduce((memo, route) => {
     const { routes, path } = route;

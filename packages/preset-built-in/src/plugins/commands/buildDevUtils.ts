@@ -1,9 +1,5 @@
-import { IApi } from '@umijs/types';
-import {
-  Bundler as DefaultBundler,
-  ConfigType,
-  webpack,
-} from '@umijs/bundler-webpack';
+import { IApi, IBundlerConfigType, BundlerConfigType } from '@umijs/types';
+import { Bundler as DefaultBundler, webpack } from '@umijs/bundler-webpack';
 import { join, resolve } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { rimraf, chalk } from '@umijs/utils';
@@ -34,7 +30,8 @@ export async function getBundleAndConfigs({
     initialValue: undefined,
   });
 
-  async function getConfig({ type }: { type: ConfigType }) {
+  // get config
+  async function getConfig({ type }: { type: IBundlerConfigType }) {
     const env: Env = api.env === 'production' ? 'production' : 'development';
 
     // 提供修改原始配置的机会，也就是生成 webpack config 之前，传给 getConfig 的参数
@@ -45,24 +42,26 @@ export async function getBundleAndConfigs({
         env,
         type,
         port,
-        hot: type === ConfigType.csr && process.env.HMR !== 'none',
+        hot: type === BundlerConfigType.csr && process.env.HMR !== 'none',
         entry: {
           umi: join(api.paths.absTmpPath!, 'umi.ts'),
         },
         // @ts-ignore
         bundleImplementor,
-        async modifyBabelOpts(opts: any) {
+        async modifyBabelOpts(opts: any, args?: any) {
           return await api.applyPlugins({
             type: api.ApplyPluginsType.modify,
             key: 'modifyBabelOpts',
             initialValue: opts,
+            args,
           });
         },
-        async modifyBabelPresetOpts(opts: any) {
+        async modifyBabelPresetOpts(opts: any, args?: any) {
           return await api.applyPlugins({
             type: api.ApplyPluginsType.modify,
             key: 'modifyBabelPresetOpts',
             initialValue: opts,
+            args,
           });
         },
         // 这些插件的执行时机都是由 bundler-webpack/src/getConfig 决定的
@@ -109,10 +108,9 @@ export async function getBundleAndConfigs({
   const bundleConfigs = await api.applyPlugins({
     type: api.ApplyPluginsType.modify,
     key: 'modifyBundleConfigs',
-    initialValue: [
-      await getConfig({ type: ConfigType.csr }),
-      api.config!.ssr && (await getConfig({ type: ConfigType.ssr })),
-    ].filter(Boolean),
+    initialValue: [await getConfig({ type: BundlerConfigType.csr })].filter(
+      Boolean,
+    ),
     args: {
       ...bundlerArgs,
       getConfig,
@@ -144,7 +142,7 @@ const WARN_AFTER_BUNDLE_GZIP_SIZE = 1.8 * 1024 * 1024;
 const WARN_AFTER_CHUNK_GZIP_SIZE = 1 * 1024 * 1024;
 
 export function printFileSizes(stats: webpack.Stats, dir: string) {
-  const ui = require('cliui')({ width: 80 });
+  const ui = require('@umijs/deps/compiled/cliui')({ width: 80 });
   const json = stats.toJson({
     hash: false,
     modules: false,
@@ -167,7 +165,8 @@ export function printFileSizes(stats: webpack.Stats, dir: string) {
 
   const assets = json.assets
     ? json.assets
-    : json?.children?.reduce((acc, child) => acc.concat(child?.assets), []);
+    : // @ts-ignore
+      json?.children?.reduce((acc, child) => acc.concat(child?.assets), []);
 
   const seenNames = new Map();
   const isJS = (val: string) => /\.js$/.test(val);

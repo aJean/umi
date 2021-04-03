@@ -7,11 +7,11 @@ import {
 } from './propertyResolver';
 
 export function getExportProps(code: string) {
-  const ast = parse(code) as babel.types.File;
+  const ast = parse(code);
   let props: unknown = undefined;
   traverse.default(ast, {
     Program: {
-      enter(path) {
+      enter(path: any) {
         const node = path.node;
         const defaultExport = findExportDefault(node);
         if (!defaultExport) return;
@@ -69,7 +69,9 @@ function findAssignmentExpressionProps(opts: {
         resolver.is(t.isAssignmentExpression(node) && node.right),
       );
       if (resolver) {
-        props[node.left.property.name] = resolver.get(node.right as any);
+        props[(node.left.property as any).name] = resolver.get(
+          node.right as any,
+        );
       }
     }
   }

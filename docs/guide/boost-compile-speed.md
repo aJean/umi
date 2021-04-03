@@ -4,8 +4,7 @@ translateHelp: true
 
 # 如何做编译提速
 
-
-如果遇到编译慢，内存爆掉，OOM 等问题，可尝试以下方法。
+如果遇到编译慢，增量编译慢，内存爆掉，OOM 等问题，可尝试以下方法。
 
 ## 配置 `nodeModulesTransform` 为  `{ type: 'none' }`
 
@@ -77,12 +76,16 @@ ios: 10,
 
 选择合适的浏览器版本，可减少不少尺寸，比如配成以下这样，预计可减少 90K （压缩后未 gzip）的尺寸。
 
-```
-chrome: 79,
-firefox: false,
-safari: false,
-edge: false,
-ios: false
+```js
+export default {
+  targets: {
+    chrome: 79,
+    firefox: false,
+    safari: false,
+    edge: false,
+    ios: false,
+  },
+}
 ```
 
 注意：
@@ -97,11 +100,11 @@ ios: false
 
 ```js
 export default {
+  dynamicImport: {},
   chunks: ['vendors', 'umi'],
   chainWebpack: function (config, { webpack }) {
     config.merge({
       optimization: {
-        minimize: true,
         splitChunks: {
           chunks: 'all',
           minSize: 30000,
@@ -136,11 +139,56 @@ export default {
 export default {
   devtool: false,
 };
+```
 
+或者，
+
+```js
 // 使用最低成本的 sourcemap 生成方式，默认是 cheap-module-source-map
 export default {
   devtool: 'eval',
 };
+```
+
+## monaco-editor 编辑器打包
+
+编辑器打包，建议使用如下配置，避免构建报错：
+
+```js
+import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
+
+export default {
+  chainWebpack: (memo) => {
+    // 更多配置 https://github.com/Microsoft/monaco-editor-webpack-plugin#options
+    memo.plugin('monaco-editor-webpack-plugin').use(MonacoWebpackPlugin, [
+      // 按需配置
+      { languages: ['javascript'] }
+    ]);
+    return memo;
+  }
+}
+```
+
+## 替换压缩器为 esbuild
+
+> 试验性功能，可能有坑，但效果拔群。
+
+以依赖了全量 antd 和 bizcharts 的项目为例，在禁用 Babel 缓存和 Terser 缓存的基础上进行了测试，效果如图：
+
+![](https://gw.alipayobjects.com/zos/antfincdn/NRwBU0Kgui/7f24657c-ec26-420b-b956-14ae4e3de0a3.png)
+
+先安装依赖，
+
+```bash
+$ yarn add @umijs/plugin-esbuild
+```
+
+然后在配置里开启，
+
+```js
+export default {
+  esbuild: {},
+}
 ```
 
 ## 不压缩
